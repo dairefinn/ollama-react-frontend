@@ -1,0 +1,35 @@
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  padding: 30px;
+}
+
+.question_prompt {
+  font-size: 1.5rem;
+}
+
+.question_textarea {
+  display: block;
+  margin: 10px 0;
+  resize: none;
+  width: 400px;
+  min-height: 50px;
+  border-radius: 6px;
+  outline: none;
+  padding: 5px;
+  border: 1px solid #35393b;
+  background-color: #2b2a33;
+  color: #fbfbfe
+}
+
+.question_response {
+  padding: 30px;
+  border-radius: 12px;
+  margin: 20px 0;
+  background-color: #2b2a33;
+  color: #e8e6e3;
+}
