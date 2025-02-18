@@ -1,4 +1,6 @@
-# Deepseek locally hosted search
+# Ollama React front-end
+
+A basic react front-end which lets you interact with locally hosted LLMs using Ollama.
 
 ## Setup
 
