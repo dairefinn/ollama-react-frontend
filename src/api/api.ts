@@ -3,7 +3,7 @@ export enum OllamaSupportedModel {
 }
 
 export type OllamaMessage = {
-    role: 'assistant' | string; // Seems like ollama will return 'assistant' for it's own messages
+    role: 'system' | 'user' | 'assistant' | 'tool'
     content: string;
 }
 

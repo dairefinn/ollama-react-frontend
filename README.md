@@ -6,6 +6,7 @@ A basic react front-end which lets you interact with locally hosted LLMs using O
 
 - Install [Ollama](https://github.com/ollama/ollama) to run LLMs locally
 - Install *deepseek-r1* using `ollama run deepseek-r1`, it's the only LLM I've added support for so far. You can use `/bye` to end the initial conversation it opens
+- Run `npm install` to install the dependencies for this project
 - Run `npm run dev` to start the React front-end at [http://localhost:5173/](http://localhost:5173/)
 
 Any API calls will automatically start the model if it's not already running, you just have to make sure that Ollama is running.
