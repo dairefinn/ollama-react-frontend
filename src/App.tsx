@@ -1,29 +1,81 @@
 import { useState } from 'react'
 
 import './App.css'
-import OllamaAPI, { OllamaGenerateResponse } from './api/api'
+import OllamaAPI, { OllamaMessage, OllamaSupportedModel } from './api/api'
 
 function App() {
-  const [response, setResponse] = useState<OllamaGenerateResponse | null>(null)
   const [question, setQuestion] = useState<string>('');
+  const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
+  const [chatHistory, setChatHistory] = useState<OllamaMessage[]>([]);
+
+  function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
+    setModel(e.target.value as OllamaSupportedModel);
+  }
 
   function onClickSubmit() {
-    OllamaAPI.generate('deepseek-r1', question)
+    let chatHistoryUpdated = [...chatHistory];
+    chatHistoryUpdated = [...chatHistoryUpdated, { role: 'user', content: question }];
+    // setChatHistory([...chatHistory, { role: 'user', content: question }]);
+
+    // OllamaAPI.generate(OllamaSupportedModel.DeepseekR1, question)
+    //   .then((response) => {
+    //     // Remove <think> </think> tags from response
+    //     // response.response = response.response.replace(/<think>/g, '');
+    //     // response.response = response.response.replace(/<\/think>/g, '');
+    //     // TODO: Don't remove these tags, instead style them differently.
+    //     // There are also escape characters in the response that need to be removed.
+    //     // eg. When asking "What is 2+2?", the printed response is "The sum of 2 and 2 is calculated as follows: \[ 2 + 2 = 4 \] Therefore, the final answer is \(\boxed{4}\).""
+    //     chatHistoryUpdated = [...chatHistoryUpdated, { role: 'assistant', content: response.response }];
+    //   })
+
+    OllamaAPI.chat(model, chatHistoryUpdated)
       .then((response) => {
-        // Remove <think> </think> tags from response
-        response.response = response.response.replace(/<think>/g, '');
-        response.response = response.response.replace(/<\/think>/g, '');
-        setResponse(response)
-      });
+        chatHistoryUpdated = [...chatHistoryUpdated, response.message];
+      })
+
+      .then(() => {
+        setQuestion('');
+        setChatHistory(chatHistoryUpdated);
+        console.info("Chat history:", chatHistoryUpdated);
+      })
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key !== 'Enter') return;
+
+    e.preventDefault();
+    onClickSubmit();
   }
 
   return (
     <>
       <div className='page-wrapper'>
-        <div className='question_prompt'>Ask deepseek something:</div>
-        <textarea className='question_textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" />
-        <button onClick={onClickSubmit}>Submit</button>
-        {response && <div className='question_response'>{response?.response}</div>}
+        <div className='area_prompt_form'>
+          <div className='question_prompt'>
+            <span>Ask&nbsp;</span>
+            <select className='model_select' value={model} onChange={onChangeModel}>
+              {
+                Object.values(OllamaSupportedModel).map(model => {
+                  return <option key={model} value={model}>{model}</option>
+                })
+              }
+            </select>
+            <span>&nbsp;something:</span>
+          </div>
+          <textarea className='question_textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
+          <button onClick={onClickSubmit}>Submit</button>
+        </div>
+        <div className='area_chat_history'>
+          {
+            chatHistory.map((message, index) => {
+              return (
+                <div key={index} className={`question_response question_${message.role}`}>
+                  {message.content}
+                </div>
+              )
+            })
+          }
+        </div>
       </div>
     </>
   )
