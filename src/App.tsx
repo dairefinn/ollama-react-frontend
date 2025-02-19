@@ -15,6 +15,7 @@ function App() {
   function onClickSubmit() {
     let chatHistoryUpdated = [...chatHistory];
     chatHistoryUpdated = [...chatHistoryUpdated, { role: 'user', content: question }];
+    setChatHistory(chatHistoryUpdated);
     // setChatHistory([...chatHistory, { role: 'user', content: question }]);
 
     // OllamaAPI.generate(OllamaSupportedModel.DeepseekR1, question)
@@ -47,9 +48,15 @@ function App() {
     onClickSubmit();
   }
 
+  function clearChatHistory(): void {
+    setChatHistory([]);
+  }
+
   return (
     <>
       <div className='page-wrapper'>
+        {chatHistory.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
+
         <div className='area_prompt_form'>
           <div className='question_prompt'>
             <span>Ask&nbsp;</span>

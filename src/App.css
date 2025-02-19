@@ -61,10 +61,12 @@
   background-color: #2b2a33;
   color: #e8e6e3;
   align-self: flex-end;
+  margin-left: 40px;
 }
 
 .question_response.question_user {
   background-color: #2b2a33;
   color: #eee;
   align-self: flex-start;
+  margin-right: 40px;
 }
