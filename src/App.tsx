@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import './App.css'
 import OllamaAPI, { OllamaMessage, OllamaSupportedModel } from './api/api'
@@ -8,15 +8,19 @@ function App() {
   const [question, setQuestion] = useState<string>('');
   const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
   const [chatHistory, setChatHistory] = useState<OllamaMessage[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
     setModel(e.target.value as OllamaSupportedModel);
   }
 
   function onClickSubmit() {
+    const chatHistoryPrevious = [...chatHistory];
     let chatHistoryUpdated = [...chatHistory];
     chatHistoryUpdated = [...chatHistoryUpdated, { role: 'user', content: question }];
+    const questionTemp = question;
     setChatHistory(chatHistoryUpdated);
+    setQuestion('');
     // setChatHistory([...chatHistory, { role: 'user', content: question }]);
 
     // OllamaAPI.generate(OllamaSupportedModel.DeepseekR1, question)
@@ -33,12 +37,16 @@ function App() {
     OllamaAPI.chat(model, chatHistoryUpdated)
       .then((response) => {
         chatHistoryUpdated = [...chatHistoryUpdated, response.message];
+        setChatHistory(chatHistoryUpdated);
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
       })
 
-      .then(() => {
-        setQuestion('');
-        setChatHistory(chatHistoryUpdated);
-        console.info("Chat history:", chatHistoryUpdated);
+      .catch(() => {
+        alert('Failed to get response from the server. Please try again later.');
+        setQuestion(questionTemp);
+        setChatHistory(chatHistoryPrevious);
       })
   }
 
@@ -58,6 +66,16 @@ function App() {
       <div className='page-wrapper'>
         {chatHistory.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
 
+        <div className='area-chat-history'>
+          {
+            chatHistory.map((message, index) => {
+              return (
+                <ChatMessage key={index} message={message} />
+              )
+            })
+          }
+        </div>
+        
         <div className='area-prompt-form'>
           <div className='question-prompt'>
             <span>Ask&nbsp;</span>
@@ -70,17 +88,8 @@ function App() {
             </select>
             <span>&nbsp;something:</span>
           </div>
-          <textarea className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
+          <textarea ref={textareaRef} className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
           <button onClick={onClickSubmit}>Submit</button>
-        </div>
-        <div className='area-chat-history'>
-          {
-            chatHistory.map((message, index) => {
-              return (
-                <ChatMessage key={index} message={message} />
-              )
-            })
-          }
         </div>
       </div>
     </>

@@ -25,3 +25,5 @@ The generate and chat APIs are currently hardcoded so if you want to change betw
 
 - Try some other LLMs, maybe allow switching between them
 - Implement support for streaming responses so that the user can see the response as it's being generated
+- Storing multiple conversations at once
+- Rolling back conversations to a previous point
