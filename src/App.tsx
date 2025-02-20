@@ -3,9 +3,11 @@ import { useRef, useState } from 'react'
 import './App.css'
 import OllamaAPI, { OllamaMessage, OllamaSupportedModel } from './api/api'
 import ChatMessage from './components/ChatMessage/ChatMessage';
+import Loading from './components/Loading/Loading';
 
 function App() {
   const [question, setQuestion] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
   const [chatHistory, setChatHistory] = useState<OllamaMessage[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -21,6 +23,7 @@ function App() {
     const questionTemp = question;
     setChatHistory(chatHistoryUpdated);
     setQuestion('');
+    setLoading(true);
     // setChatHistory([...chatHistory, { role: 'user', content: question }]);
 
     // OllamaAPI.generate(OllamaSupportedModel.DeepseekR1, question)
@@ -48,6 +51,10 @@ function App() {
         setQuestion(questionTemp);
         setChatHistory(chatHistoryPrevious);
       })
+
+      .finally(() => {
+        setLoading(false);
+      });
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -73,6 +80,9 @@ function App() {
                 <ChatMessage key={index} message={message} />
               )
             })
+          }
+          {
+            loading && <Loading />
           }
         </div>
         
