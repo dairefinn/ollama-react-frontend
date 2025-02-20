@@ -8,7 +8,7 @@
 
 /* Prompt form */
 
-.area_prompt_form {
+.area-prompt-form {
   border: 1px solid #35393b;
   padding: 20px;
   border-radius: 5px;
@@ -16,12 +16,12 @@
   flex-direction: column;
 }
 
-.question_prompt {
+.question-prompt {
   font-size: 1.5rem;
   text-align: center;
 }
 
-.question_textarea {
+.question-textarea {
   display: block;
   margin: 10px 0;
   resize: none;
@@ -36,7 +36,7 @@
   width: 100%;
 }
 
-.area_prompt_form button {
+.area-prompt-form button {
   align-self: flex-end;
   padding: 5px 10px;
   margin: 0;
@@ -44,29 +44,7 @@
 
 /* Chat history */
 
-.area_chat_history {
+.area-chat-history {
   display: flex;
   flex-direction: column;
-}
-
-.question_response {
-  padding: 30px;
-  border-radius: 12px;
-  margin: 20px 0;
-  background-color: #2b2a33;
-  color: #e8e6e3;
-}
-
-.question_response.question_assistant {
-  background-color: #2b2a33;
-  color: #e8e6e3;
-  align-self: flex-end;
-  margin-left: 40px;
-}
-
-.question_response.question_user {
-  background-color: #2b2a33;
-  color: #eee;
-  align-self: flex-start;
-  margin-right: 40px;
 }

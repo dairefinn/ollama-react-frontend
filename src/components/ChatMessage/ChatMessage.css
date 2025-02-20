@@ -1,0 +1,26 @@
+.chat-message {
+    padding: 30px;
+    border-radius: 12px;
+    margin: 20px 0;
+    background-color: #2b2a33;
+    color: #e8e6e3;
+}
+
+.chat-message.chat-message-assistant {
+    background-color: #2b2a33;
+    color: #e8e6e3;
+    align-self: flex-end;
+    margin-left: 40px;
+}
+
+.chat-message.chat-message-user {
+    background-color: #2b2a33;
+    color: #eee;
+    align-self: flex-start;
+    margin-right: 40px;
+}
+
+.think-content {
+    font-size: 10px;
+    color: #999;
+}

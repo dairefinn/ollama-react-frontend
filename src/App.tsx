@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 import './App.css'
 import OllamaAPI, { OllamaMessage, OllamaSupportedModel } from './api/api'
+import ChatMessage from './components/ChatMessage/ChatMessage';
 
 function App() {
   const [question, setQuestion] = useState<string>('');
@@ -57,10 +58,10 @@ function App() {
       <div className='page-wrapper'>
         {chatHistory.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
 
-        <div className='area_prompt_form'>
-          <div className='question_prompt'>
+        <div className='area-prompt-form'>
+          <div className='question-prompt'>
             <span>Ask&nbsp;</span>
-            <select className='model_select' value={model} onChange={onChangeModel}>
+            <select className='model-select' value={model} onChange={onChangeModel}>
               {
                 Object.values(OllamaSupportedModel).map(model => {
                   return <option key={model} value={model}>{model}</option>
@@ -69,16 +70,14 @@ function App() {
             </select>
             <span>&nbsp;something:</span>
           </div>
-          <textarea className='question_textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
+          <textarea className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
           <button onClick={onClickSubmit}>Submit</button>
         </div>
-        <div className='area_chat_history'>
+        <div className='area-chat-history'>
           {
             chatHistory.map((message, index) => {
               return (
-                <div key={index} className={`question_response question_${message.role}`}>
-                  {message.content}
-                </div>
+                <ChatMessage key={index} message={message} />
               )
             })
           }
