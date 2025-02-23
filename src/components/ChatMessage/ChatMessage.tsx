@@ -1,5 +1,5 @@
 import Markdown from "react-markdown";
-import { OllamaMessage } from "../../api/api";
+import { OllamaMessage } from "../../api/ollama-models";
 import './ChatMessage.css';
 import { useState } from "react";
 

@@ -1,16 +1,16 @@
 import { useRef, useState } from "react";
 import OllamaAPI, {  } from "../api/ollama-api";
-import ChatMessage from "../components/ChatMessage/ChatMessage";
-import Loading from "../components/Loading/Loading";
 import { OllamaMessage, OllamaSupportedModel } from "../api/ollama-models";
+import Loading from "../components/Loading/Loading";
+import ChatMessage from '../components/ChatMessage/ChatMessage';
 
 
-function ChatPage()
+function QueryPage()
 {
     const [question, setQuestion] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
-    const [chatHistory, setChatHistory] = useState<OllamaMessage[]>([]);
+    const [queryHistory, setQueryHistory] = useState<OllamaMessage[]>([]);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
   
     function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -18,18 +18,18 @@ function ChatPage()
     }
   
     function onClickSubmit() {
-      const chatHistoryPrevious = [...chatHistory];
-      let chatHistoryUpdated = [...chatHistory];
-      chatHistoryUpdated = [...chatHistoryUpdated, { role: 'user', content: question }];
+      const queryHistoryPrevious = [...queryHistory];
+      let queryHistoryUpdated: OllamaMessage[] = [];
+      queryHistoryUpdated = [{ role: 'user', content: question }];
       const questionTemp = question;
-      setChatHistory(chatHistoryUpdated);
+      setQueryHistory(queryHistoryUpdated);
       setQuestion('');
       setLoading(true);
-  
-      OllamaAPI.chat(model, chatHistoryUpdated)
+
+      OllamaAPI.generate(model, question)
         .then((response) => {
-          chatHistoryUpdated = [...chatHistoryUpdated, response.message];
-          setChatHistory(chatHistoryUpdated);
+          queryHistoryUpdated = [...queryHistoryUpdated, { role: 'assistant', content: response.response }];
+          setQueryHistory(queryHistoryUpdated);
           if (textareaRef.current) {
             textareaRef.current.focus();
           }
@@ -38,7 +38,7 @@ function ChatPage()
         .catch(() => {
           alert('Failed to get response from the server. Please try again later.');
           setQuestion(questionTemp);
-          setChatHistory(chatHistoryPrevious);
+          setQueryHistory(queryHistoryPrevious);
         })
   
         .finally(() => {
@@ -53,17 +53,17 @@ function ChatPage()
       onClickSubmit();
     }
   
-    function clearChatHistory(): void {
-      setChatHistory([]);
+    function clearQueryHistory(): void {
+      setQueryHistory([]);
     }
   
     return (
       <>
-        {chatHistory.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
+        {queryHistory.length > 0 && <button onClick={clearQueryHistory}>Clear query history</button>}
 
-        <div className='area-chat-history'>
+        <div className='area-query-history'>
           {
-            chatHistory.map((message, index) => {
+            queryHistory.map((message, index) => {
               return (
                 <ChatMessage key={index} message={message} />
               )
@@ -93,4 +93,4 @@ function ChatPage()
     )
 }
 
-export default ChatPage;
+export default QueryPage;
