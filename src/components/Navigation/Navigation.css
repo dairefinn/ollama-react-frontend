@@ -1,0 +1,26 @@
+.navigation {
+    display: flex;
+    gap: 15px;
+    border-bottom: 1px solid #2F2F2F;
+    background-color: #1F1F1F;
+    padding: 10px;
+}
+
+.navigation .navigation-link {
+    text-decoration: none;
+    font-weight: 600;
+    color: #DDDDDD;
+    padding: 10px;
+    border-radius: 5px;
+    border-color: #2F2F2F;
+    border-width: 1px;
+    border-style: solid;
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+}
+
+.navigation .navigation-link:hover,
+.navigation .navigation-link.active {
+    border-color: #2F2F2F;
+    background-color: #2F2F2F;
+}
