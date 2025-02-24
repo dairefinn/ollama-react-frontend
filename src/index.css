@@ -67,3 +67,8 @@ button {
   display: flex;
   flex-direction: column;
 }
+
+.area-button-actions {
+  display: flex;
+  justify-content: center;
+}
