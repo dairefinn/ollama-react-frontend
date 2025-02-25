@@ -35,8 +35,8 @@ function ChatPage()
         }
       })
 
-      .catch(() => {
-        alert('Failed to get response from the server. Please try again later.');
+      .catch((e: Error) => {
+        alert(e.message);
         setQuestion(questionTemp);
         setChatHistory(chatHistoryPrevious);
       })
@@ -120,7 +120,7 @@ function ChatPage()
       
       <div className='area-prompt-form'>
         <div className='question-prompt'>
-          <span>Chat with&nbsp;</span>
+          <span>Chat with</span>
           <select className='model-select' value={model} onChange={onChangeModel}>
             {
               Object.values(OllamaSupportedModel).map(model => {

@@ -7,7 +7,8 @@ class OllamaAPIHandler
     
     public async generate(model: OllamaSupportedModel, prompt: string): Promise<OllamaGenerateResponse>
     {
-        console.info(`Generating with model ${model} and prompt ${prompt}`)
+        OllamaAPIHandler.validatePrompt(prompt);
+
         return fetch(
             `${this.baseUrl}/api/generate`,
             {
@@ -21,9 +22,11 @@ class OllamaAPIHandler
         ).then(response => response.json());
     }
 
-    public async chat(model: OllamaSupportedModel, messages?: OllamaMessage[], tools?: OllamaToolRequest[]): Promise<OllamaChatResponse>
+    public async chat(model: OllamaSupportedModel, messages: OllamaMessage[], tools?: OllamaToolRequest[]): Promise<OllamaChatResponse>
     {
-        console.info(`Chatting with model ${model} and messages ${messages} and tools ${tools}`)
+        const lastMessage: string = messages[messages.length - 1].content || "";
+        OllamaAPIHandler.validatePrompt(lastMessage);
+
         return fetch(
             `${this.baseUrl}/api/chat`,
             {
@@ -36,6 +39,20 @@ class OllamaAPIHandler
                 })
             }
         ).then(response => response.json())
+    }
+
+    private static validatePrompt(prompt: string): void
+    {
+        console.info(`Validating prompt ${prompt}`)
+        if (!prompt || prompt.length === 0)
+        {
+            throw new Error("Prompt cannot be empty");
+        }
+
+        if (prompt.length > 2048)
+        {
+            throw new Error("Prompt cannot be longer than 2048 characters");
+        }
     }
 
 }

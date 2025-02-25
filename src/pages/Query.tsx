@@ -35,8 +35,8 @@ function QueryPage()
           }
         })
   
-        .catch(() => {
-          alert('Failed to get response from the server. Please try again later.');
+        .catch((e: Error) => {
+          alert(e.message);
           setQuestion(questionTemp);
           setQueryHistory(queryHistoryPrevious);
         })
@@ -76,7 +76,7 @@ function QueryPage()
         
         <div className='area-prompt-form'>
           <div className='question-prompt'>
-            <span>Ask&nbsp;</span>
+            <span>Ask</span>
             <select className='model-select' value={model} onChange={onChangeModel}>
               {
                 Object.values(OllamaSupportedModel).map(model => {
@@ -84,7 +84,7 @@ function QueryPage()
                 })
               }
             </select>
-            <span>&nbsp;something:</span>
+            <span>something:</span>
           </div>
           <textarea ref={textareaRef} className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
           <button onClick={onClickSubmit}>Submit</button>
