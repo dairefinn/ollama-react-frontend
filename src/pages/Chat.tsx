@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 import OllamaAPI, {  } from "../api/ollama-api";
 import ChatMessage from "../components/ChatMessage/ChatMessage";
 import Loading from "../components/Loading/Loading";
-import { OllamaMessage, OllamaSupportedModel } from "../api/ollama-models";
+import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
+import { OllamaConversation } from "../models/ollama-conversation.model";
+import { OllamaMessage } from "../models/ollama-message.model";
 
 
 function ChatPage()
@@ -10,7 +12,7 @@ function ChatPage()
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
-  const [chatHistory, setChatHistory] = useState<OllamaMessage[]>([]);
+  const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -18,18 +20,16 @@ function ChatPage()
   }
 
   function onClickSubmit() {
-    const chatHistoryPrevious = [...chatHistory];
-    let chatHistoryUpdated = [...chatHistory];
-    chatHistoryUpdated = [...chatHistoryUpdated, { role: 'user', content: question }];
-    const questionTemp = question;
-    setChatHistory(chatHistoryUpdated);
+    const newMessage = new OllamaMessage(question);
+    conversation.addMessage(newMessage);
+
     setQuestion('');
     setLoading(true);
 
-    OllamaAPI.chat(model, chatHistoryUpdated)
+    OllamaAPI.chat(model, conversation)
       .then((response) => {
-        chatHistoryUpdated = [...chatHistoryUpdated, response.message];
-        setChatHistory(chatHistoryUpdated);
+        conversation.addMessage(response.message);
+
         if (textareaRef.current) {
           textareaRef.current.focus();
         }
@@ -37,8 +37,8 @@ function ChatPage()
 
       .catch((e: Error) => {
         alert(e.message);
-        setQuestion(questionTemp);
-        setChatHistory(chatHistoryPrevious);
+        setQuestion(conversation.latestMessage?.content || '');
+        conversation.undoLatestMessage();
       })
 
       .finally(() => {
@@ -54,11 +54,11 @@ function ChatPage()
   }
 
   function clearChatHistory(): void {
-    setChatHistory([]);
+    setConversation(new OllamaConversation());
   }
 
   function exportChatHistory(): void {
-    const blob = new Blob([JSON.stringify(chatHistory)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(conversation)], { type: 'application/json' });
 
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -82,8 +82,8 @@ function ChatPage()
       reader.onload = (e) => {
         const content = e.target?.result as string;
         try {
-          const chatHistoryJson = JSON.parse(content);
-          setChatHistory(chatHistoryJson);
+          const importedConversationJson = JSON.parse(content);
+          setConversation(importedConversationJson);
           input.remove();
         } catch {
           alert('Invalid chat history file');
@@ -99,15 +99,16 @@ function ChatPage()
   return (
     <>
       <div className='area-button-actions'>
-        {chatHistory.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
+        {conversation.messages.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
         &nbsp;
-        {chatHistory.length === 0 && <button onClick={importChatHistory}>Import chat history</button>}
-        {chatHistory.length > 0 && <button onClick={exportChatHistory}>Export chat history</button>}
+        {conversation.messages.length === 0 && <button onClick={importChatHistory}>Import chat history</button>}
+        {conversation.messages.length > 0 && <button onClick={exportChatHistory}>Export chat history</button>}
       </div>
 
+      {/* TODO: Replace this with a component which renders a conversation object */}
       <div className='area-chat-history'>
         {
-          chatHistory.map((message, index) => {
+          conversation.messages.map((message, index) => {
             return (
               <ChatMessage key={index} message={message} />
             )

@@ -1,8 +1,10 @@
 import { useRef, useState } from "react";
 import OllamaAPI, {  } from "../api/ollama-api";
-import { OllamaMessage, OllamaSupportedModel } from "../api/ollama-models";
+import { OllamaMessage } from "../models/ollama-message.model";
+import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
 import Loading from "../components/Loading/Loading";
 import ChatMessage from '../components/ChatMessage/ChatMessage';
+import { OllamaConversation } from "../models/ollama-conversation.model";
 
 
 function QueryPage()
@@ -10,7 +12,7 @@ function QueryPage()
     const [question, setQuestion] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
-    const [queryHistory, setQueryHistory] = useState<OllamaMessage[]>([]);
+    const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
     const textareaRef = useRef<HTMLTextAreaElement>(null);
   
     function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -18,18 +20,16 @@ function QueryPage()
     }
   
     function onClickSubmit() {
-      const queryHistoryPrevious = [...queryHistory];
-      let queryHistoryUpdated: OllamaMessage[] = [];
-      queryHistoryUpdated = [{ role: 'user', content: question }];
-      const questionTemp = question;
-      setQueryHistory(queryHistoryUpdated);
+      const newMessage = new OllamaMessage(question);
+      conversation.addMessage(newMessage);
+
       setQuestion('');
       setLoading(true);
 
-      OllamaAPI.generate(model, question)
+      OllamaAPI.generate(model, conversation.latestMessage)
         .then((response) => {
-          queryHistoryUpdated = [...queryHistoryUpdated, { role: 'assistant', content: response.response }];
-          setQueryHistory(queryHistoryUpdated);
+          conversation.addMessage(new OllamaMessage(response.response, 'assistant'));
+
           if (textareaRef.current) {
             textareaRef.current.focus();
           }
@@ -37,8 +37,9 @@ function QueryPage()
   
         .catch((e: Error) => {
           alert(e.message);
-          setQuestion(questionTemp);
-          setQueryHistory(queryHistoryPrevious);
+
+          setQuestion(conversation.latestMessage?.content || '');
+          conversation.undoLatestMessage();
         })
   
         .finally(() => {
@@ -54,16 +55,16 @@ function QueryPage()
     }
   
     function clearQueryHistory(): void {
-      setQueryHistory([]);
+      setConversation(new OllamaConversation());
     }
   
     return (
       <>
-        {queryHistory.length > 0 && <button onClick={clearQueryHistory}>Clear query history</button>}
+        {conversation.messages.length > 0 && <button onClick={clearQueryHistory}>Clear query history</button>}
 
         <div className='area-query-history'>
           {
-            queryHistory.map((message, index) => {
+            conversation.messages.map((message, index) => {
               return (
                 <ChatMessage key={index} message={message} />
               )
