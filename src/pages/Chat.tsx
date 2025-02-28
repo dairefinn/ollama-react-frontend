@@ -4,7 +4,7 @@ import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage } from "../models/ollama-message.model";
 
-import Conversation from "../components/Conversation/Conversation";
+import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
 
 
 function ChatPage(): JSX.Element
@@ -20,7 +20,11 @@ function ChatPage(): JSX.Element
   }
 
   function onClickSubmit() {
-    const newMessage = new OllamaMessage(question);
+    submitPrompt(question);
+  }
+
+  function submitPrompt(prompt: string): void {
+    const newMessage = new OllamaMessage(prompt);
     conversation.addMessage(newMessage);
 
     setQuestion('');
@@ -37,7 +41,7 @@ function ChatPage(): JSX.Element
 
       .catch((e: Error) => {
         alert(e.message);
-        setQuestion(conversation.latestMessage?.content || '');
+        setQuestion(prompt);
         conversation.undoLatestMessage();
       })
 
@@ -82,8 +86,9 @@ function ChatPage(): JSX.Element
       reader.onload = (e) => {
         const content = e.target?.result as string;
         try {
-          const importedConversationJson = JSON.parse(content);
-          setConversation(importedConversationJson);
+          const importedConversationJson = JSON.parse(content) as OllamaConversation;
+          const importedConversation = new OllamaConversation(importedConversationJson.messages);
+          setConversation(importedConversation);
           input.remove();
         } catch {
           alert('Invalid chat history file');
@@ -96,6 +101,22 @@ function ChatPage(): JSX.Element
     input.click();
   }
 
+  function onConversationEvent(index: number, event: ConversationEventType): void {
+
+    if (event === 'retry') {
+      const previousPrompt: string  = conversation.messages[index - 1].content || '';
+      conversation.revertToMessage(index - 2);
+      setConversation(new OllamaConversation(conversation.messages)); // Prompt Conversation component to re-render
+      submitPrompt(previousPrompt);
+      return;
+    }
+
+    if (event === 'revert') {
+      conversation.revertToMessage(index);
+      setConversation(new OllamaConversation(conversation.messages)); // Prompt Conversation component to re-render
+    }
+  }
+
   return (
     <>
       <div className='area-button-actions'>
@@ -105,7 +126,7 @@ function ChatPage(): JSX.Element
         {conversation.messages.length > 0 && <button onClick={exportChatHistory}>Export chat history</button>}
       </div>
 
-      <Conversation conversation={conversation} loading={loading} />
+      <Conversation conversation={conversation} loading={loading} onEvent={onConversationEvent} />
       
       <div className='area-prompt-form'>
         <div className='question-prompt'>

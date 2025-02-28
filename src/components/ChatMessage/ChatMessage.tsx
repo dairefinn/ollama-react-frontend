@@ -3,8 +3,12 @@ import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
 
+export type ChatMessageEventType = 'retry' | 'revert';
+
 interface ChatMessageProps {
     message: OllamaMessage;
+    onEvent?: (event: ChatMessageEventType) => void;
+    isLatest?: boolean;
 }
 
 function extractThinkContent(text: string): [string, string] {
@@ -21,7 +25,7 @@ function extractThinkContent(text: string): [string, string] {
     return [messageParsed, thinkContext];
 }
 
-function ChatMessage({ message }: ChatMessageProps) {
+function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
     const [viewingContext, setViewingContext] = useState(false);
     const [messageParsed, thinkContext] = extractThinkContent(message.content);
 
@@ -60,6 +64,12 @@ function ChatMessage({ message }: ChatMessageProps) {
                     </>
                 )}
             </div>
+            {onEvent !== undefined && (
+                <div className="chat-message-actions">
+                    {message.role === 'assistant' && !isLatest && <button onClick={() => onEvent('revert')}>Rewind to this message</button>}
+                    {message.role === 'assistant' && isLatest && <button onClick={() => onEvent('retry')}>Generate again</button>}
+                </div>
+            )}
         </div>
     );
 }
