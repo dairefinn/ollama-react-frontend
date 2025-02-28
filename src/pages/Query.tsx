@@ -1,13 +1,13 @@
-import { useRef, useState } from "react";
-import OllamaAPI, {  } from "../api/ollama-api";
+import { JSX, useRef, useState } from "react";
+import { OllamaAPI } from "../api/ollama-api";
 import { OllamaMessage } from "../models/ollama-message.model";
 import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
-import Loading from "../components/Loading/Loading";
-import ChatMessage from '../components/ChatMessage/ChatMessage';
 import { OllamaConversation } from "../models/ollama-conversation.model";
 
+import Conversation from "../components/Conversation/Conversation";
 
-function QueryPage()
+
+function QueryPage(): JSX.Element
 {
     const [question, setQuestion] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
@@ -62,18 +62,7 @@ function QueryPage()
       <>
         {conversation.messages.length > 0 && <button onClick={clearQueryHistory}>Clear query history</button>}
 
-        <div className='area-query-history'>
-          {
-            conversation.messages.map((message, index) => {
-              return (
-                <ChatMessage key={index} message={message} />
-              )
-            })
-          }
-          {
-            loading && <Loading />
-          }
-        </div>
+        <Conversation conversation={conversation} loading={loading} />
         
         <div className='area-prompt-form'>
           <div className='question-prompt'>

@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
+import { JSX, useEffect } from 'react';
 import './LayoutDefault.css';
 
 import { Outlet, useLocation, useNavigate } from 'react-router';
 
-function LayoutDefault()
+function LayoutDefault(): JSX.Element
 {
     // If there is no child route, redirect to /chat
     const location = useLocation();

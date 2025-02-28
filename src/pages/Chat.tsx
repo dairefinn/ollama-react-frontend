@@ -1,13 +1,13 @@
-import { useRef, useState } from "react";
-import OllamaAPI, {  } from "../api/ollama-api";
-import ChatMessage from "../components/ChatMessage/ChatMessage";
-import Loading from "../components/Loading/Loading";
+import { JSX, useRef, useState } from "react";
+import { OllamaAPI } from "../api/ollama-api";
 import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage } from "../models/ollama-message.model";
 
+import Conversation from "../components/Conversation/Conversation";
 
-function ChatPage()
+
+function ChatPage(): JSX.Element
 {
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -105,19 +105,7 @@ function ChatPage()
         {conversation.messages.length > 0 && <button onClick={exportChatHistory}>Export chat history</button>}
       </div>
 
-      {/* TODO: Replace this with a component which renders a conversation object */}
-      <div className='area-chat-history'>
-        {
-          conversation.messages.map((message, index) => {
-            return (
-              <ChatMessage key={index} message={message} />
-            )
-          })
-        }
-        {
-          loading && <Loading />
-        }
-      </div>
+      <Conversation conversation={conversation} loading={loading} />
       
       <div className='area-prompt-form'>
         <div className='question-prompt'>

@@ -4,8 +4,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
-import ChatPage from './pages/Chat'
 import LayoutDefault from './layouts/LayoutDefault'
+import ChatPage from './pages/Chat'
 import QueryPage from './pages/Query'
 import Navigation from './components/Navigation/Navigation'
 
