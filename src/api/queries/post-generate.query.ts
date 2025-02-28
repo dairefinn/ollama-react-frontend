@@ -1,6 +1,5 @@
 import { OllamaMessage } from "../../models/ollama-message.model";
 import { OllamaSupportedModel } from "../../models/ollama-supported-model.model";
-import { OllamaAPIHandler } from "../ollama-api";
 import { validatePrompt } from "../validators/query.validator";
 
 export type OllamaGenerateRequest = {
@@ -24,31 +23,34 @@ export type OllamaGenerateResponse = {
     eval_duration: number;
 };
 
-export const queryPostGenerate = (model: OllamaSupportedModel, message: OllamaMessage): Promise<OllamaGenerateResponse> => {
-    try {
-        if (message === null) {
-            return Promise.reject(new Error("No messages in conversation"));
+export const queryPostGenerate = (baseUrl: string) => {
+    return async (model: OllamaSupportedModel, message: OllamaMessage): Promise<OllamaGenerateResponse> => {
+        try {
+            if (message === null) {
+                return Promise.reject(new Error("No messages in conversation"));
+            }
+
+            validatePrompt(message.content);
+        } catch (e: unknown) {
+            if (e instanceof Error) {
+                throw Promise.reject(new Error(`Invalid prompt: ${e.message || 'Unknown error'}`));
+            } else {
+                throw Promise.reject(new Error('Invalid prompt: Unknown error'));
+            }
         }
 
-        validatePrompt(message.content);
-    } catch (e: unknown) {
-        if (e instanceof Error) {
-            throw Promise.reject(new Error(`Invalid prompt: ${e.message || 'Unknown error'}`));
-        } else {
-            throw Promise.reject(new Error('Invalid prompt: Unknown error'));
-        }
+
+        const response = await fetch(
+            `${baseUrl}/api/generate`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    model: model,
+                    prompt: message.content,
+                    stream: false
+                } as OllamaGenerateRequest)
+            }
+        );
+        return await response.json();
     }
-
-
-    return fetch(
-        `${OllamaAPIHandler.BASE_URL}/api/generate`,
-        {
-            method: "POST",
-            body: JSON.stringify({
-                model: model,
-                prompt: message.content,
-                stream: false
-            } as OllamaGenerateRequest)
-        }
-    ).then(response => response.json());
 }
