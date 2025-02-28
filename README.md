@@ -15,7 +15,19 @@ Run `npm run dev` in the root directory to start the React front-end at [http://
 
 Any API calls will automatically start the model if it's not already running, you just have to make sure that Ollama is running.
 
-Type in a search query and click submit to send a request to the LLM. The results will be displayed on the page.
+## Features
+
+### Query
+
+Type in a prompt and click submit to send a request to the LLM. The LLM will generate a response and display it on the page. Only one prompt and response will be displayed at a time.
+
+### Chat
+
+Type in a message and click submit to send a request to the LLM. The LLM will generate a response and display it on the page. The conversation history will be displayed on the page.
+
+You have the option to regenerate the latest response by the LLM or to revert the conversation back to a previous point.
+
+Conversation history can be exported to a JSON file and re-imported to restore the conversation. There is also the option to clear the conversation history.
 
 ## Other notes
 
@@ -26,4 +38,3 @@ The generate and chat APIs are currently hardcoded so if you want to change betw
 - Try some other LLMs, maybe allow switching between them
 - Implement support for streaming responses so that the user can see the response as it's being generated
 - Storing multiple conversations at once
-- Rolling back conversations to a previous point
