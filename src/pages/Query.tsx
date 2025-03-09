@@ -27,19 +27,18 @@ function QueryPage(): JSX.Element
       setQuestion('');
       setLoading(true);
 
-      OllamaAPI.generate(model, conversation.latestMessage)
+      OllamaAPI.generateStream(model, conversation.latestMessage)
         .then(async (response) => {
           conversation.addMessage(new OllamaMessage("", 'assistant'));
  
           const decoder = new TextDecoder("utf-8");
-          let iteration = 0;
           let thinkProcessed: boolean = false;
           const reader = response.body?.getReader();
           if (reader) {
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
-              console.info("Iteration: " + iteration++);
+
               const chunk = decoder.decode(value);
               try {
                 const chunkResponse: OllamaGenerateResponse = JSON.parse(chunk) as OllamaGenerateResponse;
@@ -51,7 +50,7 @@ function QueryPage(): JSX.Element
                 console.error(e);
               }
 
-              // Force refresh page if think tags have been closed
+              // Only render UI updates after the <think> tag is closed
               if(thinkProcessed) {
                 setConversation(new OllamaConversation(conversation.messages));
               }

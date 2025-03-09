@@ -1,38 +1,10 @@
 import { OllamaConversation } from "../../models/ollama-conversation.model";
-import { OllamaMessage } from "../../models/ollama-message.model";
 import { OllamaSupportedModel } from "../../models/ollama-supported-model.model";
 import { validatePrompt } from "../validators/query.validator";
+import { OllamaChatRequest, OllamaToolRequest } from "./post-chat.query";
 
-export type OllamaToolRequest = {
-    type: string;
-    function: {
-        name: string;
-        properties: unknown;
-    };
-};
-
-export type OllamaChatRequest = {
-    model: OllamaSupportedModel;
-    messages: OllamaMessage[];
-    tools?: OllamaToolRequest[];
-    stream?: boolean;
-}
-
-export type OllamaChatResponse = {
-    model: OllamaSupportedModel;
-    created_at: string;
-    message: OllamaMessage;
-    done: boolean;
-    total_duration: number;
-    load_duration: number;
-    prompt_eval_count: number;
-    prompt_eval_duration: number;
-    eval_count: number;
-    eval_duration: number;
-};
-
-export const queryPostChat = (baseUrl: string) => {
-    return async (model: OllamaSupportedModel, conversation: OllamaConversation, tools?: OllamaToolRequest[]): Promise<OllamaChatResponse> => {
+export const queryPostChatStream = (baseUrl: string) => {
+    return async (model: OllamaSupportedModel, conversation: OllamaConversation, tools?: OllamaToolRequest[]): Promise<Response> => {
         try {
             const latestMessage = conversation.latestMessage;
             if (latestMessage === null) {
@@ -48,7 +20,7 @@ export const queryPostChat = (baseUrl: string) => {
             }
         }
 
-        const response = await fetch(
+        const response = fetch(
             `${baseUrl}/api/chat`,
             {
                 method: "POST",
@@ -56,11 +28,11 @@ export const queryPostChat = (baseUrl: string) => {
                     model: model,
                     messages: conversation.messages,
                     tools: tools || [],
-                    stream: false
+                    stream: true
                 } as OllamaChatRequest)
             }
         );
 
-        return await response.json();
+        return response;
     }
 }

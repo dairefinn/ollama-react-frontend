@@ -5,6 +5,7 @@ import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage } from "../models/ollama-message.model";
 
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
+import { OllamaChatResponse } from "../api/queries/post-chat.query";
 
 
 function ChatPage(): JSX.Element
@@ -30,9 +31,35 @@ function ChatPage(): JSX.Element
     setQuestion('');
     setLoading(true);
 
-    OllamaAPI.chat(model, conversation)
-      .then((response) => {
-        conversation.addMessage(response.message);
+    OllamaAPI.chatStream(model, conversation)
+      .then(async (response) => {
+        conversation.addMessage(new OllamaMessage("", 'assistant'));
+
+        const decoder = new TextDecoder("utf-8");
+        let thinkProcessed: boolean = false;
+        const reader = response.body?.getReader();
+        if (reader) {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            try {
+              const chunkResponse: OllamaChatResponse = JSON.parse(chunk) as OllamaChatResponse;
+              if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) {
+                thinkProcessed = true;
+              }
+              conversation.appendToLatestMessage(chunkResponse.message.content);
+            } catch (e) {
+              console.error(e);
+            }
+
+            // Only render UI updates after the <think> tag is closed
+            if(thinkProcessed) {
+              setConversation(new OllamaConversation(conversation.messages));
+            }
+          }
+        }
 
         if (textareaRef.current) {
           textareaRef.current.focus();
