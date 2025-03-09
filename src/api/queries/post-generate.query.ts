@@ -24,21 +24,20 @@ export type OllamaGenerateResponse = {
 };
 
 export const queryPostGenerate = (baseUrl: string) => {
-    return async (model: OllamaSupportedModel, message: OllamaMessage): Promise<OllamaGenerateResponse> => {
+    return async (model: OllamaSupportedModel, message: OllamaMessage): Promise<Response> => {
         try {
             if (message === null) {
-                return Promise.reject(new Error("No messages in conversation"));
+                throw new Error("No messages in conversation");
             }
 
             validatePrompt(message.content);
         } catch (e: unknown) {
             if (e instanceof Error) {
-                throw Promise.reject(new Error(`Invalid prompt: ${e.message || 'Unknown error'}`));
+                throw new Error(`Invalid prompt: ${e.message || 'Unknown error'}`);
             } else {
-                throw Promise.reject(new Error('Invalid prompt: Unknown error'));
+                throw new Error('Invalid prompt: Unknown error');
             }
         }
-
 
         const response = await fetch(
             `${baseUrl}/api/generate`,
@@ -47,10 +46,11 @@ export const queryPostGenerate = (baseUrl: string) => {
                 body: JSON.stringify({
                     model: model,
                     prompt: message.content,
-                    stream: false
+                    stream: true
                 } as OllamaGenerateRequest)
             }
         );
-        return await response.json();
+
+        return response;
     }
 }
