@@ -6,6 +6,7 @@ import { OllamaConversation } from "../models/ollama-conversation.model";
 
 import Conversation from "../components/Conversation/Conversation";
 import { OllamaGenerateResponse } from "../api/queries/post-generate.query";
+import { ResponseStreamer } from "../utils/response-streaming-util";
 
 
 function QueryPage(): JSX.Element
@@ -31,31 +32,23 @@ function QueryPage(): JSX.Element
         .then(async (response) => {
           conversation.addMessage(new OllamaMessage("", 'assistant'));
  
-          const decoder = new TextDecoder("utf-8");
           let thinkProcessed: boolean = false;
-          const reader = response.body?.getReader();
-          if (reader) {
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-
-              const chunk = decoder.decode(value);
-              try {
+  
+          ResponseStreamer.Stream(
+              response,
+              (chunk: string) => {
                 const chunkResponse: OllamaGenerateResponse = JSON.parse(chunk) as OllamaGenerateResponse;
                 if (!thinkProcessed && chunkResponse.response.includes('</think>')) {
                   thinkProcessed = true;
                 }
                 conversation.appendToLatestMessage(chunkResponse.response);
-              } catch (e) {
-                console.error(e);
+  
+                // Only render UI updates after the <think> tag is closed
+                if(thinkProcessed) {
+                  setConversation(new OllamaConversation(conversation.messages));
+                }
               }
-
-              // Only render UI updates after the <think> tag is closed
-              if(thinkProcessed) {
-                setConversation(new OllamaConversation(conversation.messages));
-              }
-            }
-          }
+          );
 
           if (textareaRef.current) {
             textareaRef.current.focus();

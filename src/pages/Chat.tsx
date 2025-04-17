@@ -6,6 +6,7 @@ import { OllamaMessage } from "../models/ollama-message.model";
 
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
 import { OllamaChatResponse } from "../api/queries/post-chat.query";
+import { ResponseStreamer } from "../utils/response-streaming-util";
 
 
 function ChatPage(): JSX.Element
@@ -35,31 +36,23 @@ function ChatPage(): JSX.Element
       .then(async (response) => {
         conversation.addMessage(new OllamaMessage("", 'assistant'));
 
-        const decoder = new TextDecoder("utf-8");
         let thinkProcessed: boolean = false;
-        const reader = response.body?.getReader();
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
 
-            const chunk = decoder.decode(value);
-            try {
+        ResponseStreamer.Stream(
+            response,
+            (chunk: string) => {
               const chunkResponse: OllamaChatResponse = JSON.parse(chunk) as OllamaChatResponse;
               if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) {
                 thinkProcessed = true;
               }
               conversation.appendToLatestMessage(chunkResponse.message.content);
-            } catch (e) {
-              console.error(e);
-            }
 
-            // Only render UI updates after the <think> tag is closed
-            if(thinkProcessed) {
-              setConversation(new OllamaConversation(conversation.messages));
+              // Only render UI updates after the <think> tag is closed
+              if(thinkProcessed) {
+                setConversation(new OllamaConversation(conversation.messages));
+              }
             }
-          }
-        }
+        );
 
         if (textareaRef.current) {
           textareaRef.current.focus();
@@ -67,6 +60,7 @@ function ChatPage(): JSX.Element
       })
 
       .catch((e: Error) => {
+        console.info("Caught error: ", e);
         alert(e.message);
         setQuestion(prompt);
         conversation.undoLatestMessage();
