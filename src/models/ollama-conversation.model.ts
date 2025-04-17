@@ -32,4 +32,9 @@ export class OllamaConversation {
         this.revertToMessage(this.messages.length - 2);        
     }
 
+    public appendToLatestMessage(content: string): void {
+        if (this.messages.length === 0) return;
+        this.messages[this.messages.length - 1].content += content;
+    }
+
 }
