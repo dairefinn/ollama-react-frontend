@@ -35,6 +35,5 @@ The generate and chat APIs are currently hardcoded so if you want to change betw
 
 ## Potential future features
 
-- Try some other LLMs, maybe allow switching between them
-- Implement support for streaming responses so that the user can see the response as it's being generated
-- Storing multiple conversations at once
+**Saving**
+Store conversation history in a lightweight local db or file. The ability to export and import conversations are already there so writing to a file would be fairly easy.
