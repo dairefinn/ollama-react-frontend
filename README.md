@@ -36,4 +36,5 @@ The generate and chat APIs are currently hardcoded so if you want to change betw
 ## Potential future features
 
 **Saving**
+
 Store conversation history in a lightweight local db or file. The ability to export and import conversations are already there so writing to a file would be fairly easy.
