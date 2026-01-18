@@ -1,19 +1,39 @@
 # Ollama React front-end
 
+<img width="600" alt="image" src="https://github.com/user-attachments/assets/b76a06ee-be14-4140-b96e-06b091548b08" />
+
 A basic react front-end which lets you interact with locally hosted LLMs using Ollama.
 
 ## Setup
 
-- Install [Ollama](https://github.com/ollama/ollama) to run LLMs locally
 - Install [Node.js](https://nodejs.org/en/) to run the front-end
-- Install *deepseek-r1* using `ollama run deepseek-r1`, it's the only LLM I've added support for so far. You can use `/bye` to end the initial conversation it opens
-- Run `npm install` in the root directory to install the dependencies for this project
+- Run `yarn install` or `npm install` in the root directory to install the dependencies for this project
+- Install [Ollama](https://github.com/ollama/ollama) to run LLMs locally
+- This project cannot force Ollama to install models for you so you will have to run `ollama pull <<MODEL_NAME>>` to download the ones you want to use. You only need to do this the first time you use a model.
+
+## Supported models
+
+The selection is only limited because I haven't added a way to type a model name yet :) - in future it should support the [full library](https://ollama.com/library).
+
+These are the ones I've added presets for:
+- deepseek-r1
+- llama3.3
+- phi4
+- gemma2
+- mistral
+- moondream
+- neural-chat
+- starling-lm
+- codellama
+- llama2-uncensored
+- llava
+- solar
 
 ## Usage
 
-Run `npm run dev` in the root directory to start the React front-end at [http://localhost:5173/](http://localhost:5173/)
+Run `yarn dev` or `npm run dev` in the project root to start the React front-end at [http://localhost:5173/](http://localhost:5173/)
 
-Any API calls will automatically start the model if it's not already running, you just have to make sure that Ollama is running.
+Any API calls will automatically start the model if it's not already running, you just have to make sure that Ollama is running. To do this, type `ollama serve` in the terminal or set it to run as a service in the background.
 
 ## Features
 
@@ -27,14 +47,8 @@ Type in a message and click submit to send a request to the LLM. The LLM will ge
 
 You have the option to regenerate the latest response by the LLM or to revert the conversation back to a previous point.
 
+### State persistence
+
 Conversation history can be exported to a JSON file and re-imported to restore the conversation. There is also the option to clear the conversation history.
 
-## Other notes
-
-The generate and chat APIs are currently hardcoded so if you want to change between the endpoints, `src/App.tsx` will need to be modified. It probably just make sense to use the chat API anyways as it's mostly the same AND supports conversation history.
-
-## Potential future features
-
-**Saving**
-
-Store conversation history in a lightweight local db or file. The ability to export and import conversations are already there so writing to a file would be fairly easy.
+The most recent conversation and model usd will be stored in your browser storage so they can be remembered between uses.
