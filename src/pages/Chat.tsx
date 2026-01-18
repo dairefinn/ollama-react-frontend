@@ -37,19 +37,31 @@ function ChatPage(): JSX.Element
         conversation.addMessage(new OllamaMessage("", 'assistant'));
 
         let thinkProcessed: boolean = false;
+        let hasSeenThinkTag: boolean = false;
 
         ResponseStreamer.Stream(
             response,
             (chunk: string) => {
-              const chunkResponse: OllamaChatResponse = JSON.parse(chunk) as OllamaChatResponse;
-              if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) {
-                thinkProcessed = true;
-              }
-              conversation.appendToLatestMessage(chunkResponse.message.content);
+              try {
+                const chunkResponse: OllamaChatResponse = JSON.parse(chunk) as OllamaChatResponse;
+                
+                // Check if this response uses think tags
+                if (chunkResponse.message.content.includes('<think>')) {
+                  hasSeenThinkTag = true;
+                }
+                
+                if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) {
+                  thinkProcessed = true;
+                }
+                
+                conversation.appendToLatestMessage(chunkResponse.message.content);
 
-              // Only render UI updates after the <think> tag is closed
-              if(thinkProcessed) {
-                setConversation(new OllamaConversation(conversation.messages));
+                // Render UI updates: either after <think> tag is closed, or immediately if no think tags are used
+                if(thinkProcessed || !hasSeenThinkTag) {
+                  setConversation(new OllamaConversation(conversation.messages));
+                }
+              } catch (e) {
+                // Error handling for chunk parsing
               }
             }
         );
