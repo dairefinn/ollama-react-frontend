@@ -7,13 +7,14 @@ import { OllamaMessage } from "../models/ollama-message.model";
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
 import { OllamaChatResponse } from "../api/queries/post-chat.query";
 import { ResponseStreamer } from "../utils/response-streaming-util";
+import { useModelStorage } from "../utils/use-model-storage";
 
 
 function ChatPage(): JSX.Element
 {
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
+  const [model, setModel] = useModelStorage();
   const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
