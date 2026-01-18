@@ -8,6 +8,7 @@ import Conversation, { ConversationEventType } from "../components/Conversation/
 import { OllamaChatResponse } from "../api/queries/post-chat.query";
 import { ResponseStreamer } from "../utils/response-streaming-util";
 import { useModelStorage } from "../utils/use-model-storage";
+import { useConversationStorage } from "../utils/use-conversation-storage";
 
 
 function ChatPage(): JSX.Element
@@ -15,7 +16,7 @@ function ChatPage(): JSX.Element
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [model, setModel] = useModelStorage();
-  const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
+  const [conversation, setConversation] = useConversationStorage();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -29,6 +30,7 @@ function ChatPage(): JSX.Element
   function submitPrompt(prompt: string): void {
     const newMessage = new OllamaMessage(prompt);
     conversation.addMessage(newMessage);
+    setConversation(new OllamaConversation(conversation.messages));
 
     setQuestion('');
     setLoading(true);
@@ -36,6 +38,7 @@ function ChatPage(): JSX.Element
     OllamaAPI.chatStream(model, conversation)
       .then(async (response) => {
         conversation.addMessage(new OllamaMessage("", 'assistant'));
+        setConversation(new OllamaConversation(conversation.messages));
 
         let thinkProcessed: boolean = false;
         let hasSeenThinkTag: boolean = false;
@@ -77,6 +80,7 @@ function ChatPage(): JSX.Element
         alert(e.message);
         setQuestion(prompt);
         conversation.undoLatestMessage();
+        setConversation(new OllamaConversation(conversation.messages));
       })
 
       .finally(() => {
