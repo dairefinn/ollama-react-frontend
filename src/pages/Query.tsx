@@ -7,13 +7,14 @@ import { OllamaConversation } from "../models/ollama-conversation.model";
 import Conversation from "../components/Conversation/Conversation";
 import { OllamaGenerateResponse } from "../api/queries/post-generate.query";
 import { ResponseStreamer } from "../utils/response-streaming-util";
+import { useModelStorage } from "../utils/use-model-storage";
 
 
 function QueryPage(): JSX.Element
 {
     const [question, setQuestion] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
-    const [model, setModel] = useState<OllamaSupportedModel>(OllamaSupportedModel.DeepseekR1);
+    const [model, setModel] = useModelStorage();
     const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
     const textareaRef = useRef<HTMLTextAreaElement>(null);
   
