@@ -2,6 +2,7 @@ import Markdown from "react-markdown";
 import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
+import { ArrowClockwise, Rewind } from "@phosphor-icons/react";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
@@ -50,10 +51,11 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
 
     return (
         <div className={`chat-message chat-message-${message.role}`} >
-            <div className='chat-message-author'>
-                {/* TODO: This will probably be a picture in future but for now it's just text */}
-                {renderAuthor()}
-            </div>
+            {message.role !== 'user' && (
+                <div className='chat-message-author'>
+                    {renderAuthor()}
+                </div>
+            )}
             <div className="chat-message-content">
                 {/* TODO: Figure out how to improve word wrapping here for long strings */}
                 <Markdown>{messageParsed}</Markdown>
@@ -66,8 +68,8 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
             </div>
             {onEvent !== undefined && (
                 <div className="chat-message-actions">
-                    {message.role === 'assistant' && !isLatest && <button onClick={() => onEvent('revert')}>Rewind to this message</button>}
-                    {message.role === 'assistant' && isLatest && <button onClick={() => onEvent('retry')}>Generate again</button>}
+                    {message.role === 'assistant' && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><Rewind size={14} /></button>}
+                    {message.role === 'assistant' && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwise size={14} /></button>}
                 </div>
             )}
         </div>

@@ -50,41 +50,32 @@ select {
 /* Prompt form */
 
 .area-prompt-form {
-  border: 1px solid #35393b;
-  padding: 20px;
-  border-radius: 5px;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
-.question-prompt {
-  font-size: 1.5rem;
+.question-actions {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .question-textarea {
   display: block;
-  margin: 10px 0;
   resize: none;
-  width: 400px;
-  min-height: 50px;
+  width: 100%;
+  min-height: 120px;
   border-radius: 6px;
   outline: none;
-  padding: 5px;
+  padding: 12px;
+  padding-bottom: 52px;
   border: 1px solid #35393b;
   background-color: #2b2a33;
   color: #fbfbfe;
-  width: 100%;
 }
 
-.area-prompt-form button {
-  align-self: flex-end;
-  padding: 5px 10px;
-  margin: 0;
-}
 
 /* Chat history */
 
@@ -95,5 +86,31 @@ select {
 
 .area-button-actions {
   display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: #e8e6e3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
   justify-content: center;
+}
+
+.icon-btn:hover {
+  background-color: #3a3944;
+  cursor: pointer;
+  background-color: #343434;
+}
+
+.icon-btn:active {
+  background-color: #383838;
 }

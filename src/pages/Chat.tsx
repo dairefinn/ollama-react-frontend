@@ -1,4 +1,5 @@
 import { JSX, useEffect, useRef, useState } from "react";
+import { Broom, DownloadSimple } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage } from "../models/ollama-message.model";
@@ -28,10 +29,6 @@ function ChatPage(): JSX.Element
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
     setModel(e.target.value);
-  }
-
-  function onClickSubmit() {
-    submitPrompt(question);
   }
 
   function submitPrompt(prompt: string): void {
@@ -165,25 +162,21 @@ function ChatPage(): JSX.Element
   return (
     <>
       <div className='area-button-actions'>
-        {conversation.messages.length > 0 && <button onClick={clearChatHistory}>Clear chat history</button>}
-        &nbsp;
-        {conversation.messages.length === 0 && <button onClick={importChatHistory}>Import chat history</button>}
-        {conversation.messages.length > 0 && <button onClick={exportChatHistory}>Export chat history</button>}
+        {conversation.messages.length === 0 && <button className='icon-btn' onClick={importChatHistory}>Import</button>}
+        {conversation.messages.length > 0 && <button className='icon-btn' title="Clear chat history" onClick={clearChatHistory}><Broom size={20} /></button>}
+        {conversation.messages.length > 0 && <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}><DownloadSimple size={20} /></button>}
       </div>
 
       <Conversation conversation={conversation} loading={loading} onEvent={onConversationEvent} />
       
       <div className='area-prompt-form'>
-        <div className='question-prompt'>
-          <span>Chat with</span>
+        <textarea ref={textareaRef} className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
+        <div className='question-actions'>
           <select className='model-select' value={model} onChange={onChangeModel} disabled={modelsLoading}>
             {modelsLoading && <option value=''>Loading models...</option>}
             {models.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <span>:</span>
         </div>
-        <textarea ref={textareaRef} className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
-        <button onClick={onClickSubmit}>Submit</button>
       </div>
     </>
   )

@@ -1,24 +1,26 @@
 .chat-message {
-    padding: 30px;
-    border-radius: 12px;
     margin: 20px 0;
-    background-color: #2b2a33;
     color: #e8e6e3;
     max-width: 100%;
 }
 
 .chat-message.chat-message-assistant {
-    background-color: #2b2a33;
-    color: #e8e6e3;
-    align-self: flex-end;
-    margin-left: 40px;
+    padding: 0;
+    background-color: transparent;
 }
 
 .chat-message.chat-message-user {
+    padding: 8px 16px;
+    border-radius: 12px;
     background-color: #2b2a33;
     color: #eee;
-    align-self: flex-start;
-    margin-right: 40px;
+    align-self: flex-end;
+    margin-left: auto;
+    max-width: 60%;
+}
+
+.chat-message.chat-message-user .chat-message-content p {
+    margin: 0;
 }
 
 .think-content {
@@ -36,4 +38,33 @@
 
 .toggle-think-context:hover {
     color: #555;
+}
+
+.chat-message-actions {
+    visibility: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-message:hover .chat-message-actions {
+    visibility: visible;
+}
+
+.chat-message-action-btn {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 4px;
+    background-color: transparent;
+    color: #e8e6e3;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-message-action-btn:hover {
+    background-color: #3a3944;
 }
