@@ -134,30 +134,32 @@
 }
 
 .system-context-header {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 0.7rem;
-    color: #444;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: #555;
     cursor: pointer;
     user-select: none;
-    letter-spacing: 0.03em;
 }
 
 .system-context-header:hover {
-    color: #777;
+    color: #888;
 }
 
 .system-context-body {
-    padding: 6px 0 0 16px;
+    padding: 8px 10px;
+    background: #1e1e24;
+    border-radius: 4px;
+    margin-top: 4px;
 }
 
 .system-context-body pre {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
-    font-size: 0.75rem;
-    color: #555;
+    font-size: 0.8rem;
+    color: #888;
     font-family: monospace;
     background: none;
     padding: 0;
