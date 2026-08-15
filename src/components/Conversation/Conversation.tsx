@@ -14,22 +14,50 @@ interface ConversationProps {
 }
 
 function Conversation({ conversation, loading, onEvent }: ConversationProps): JSX.Element {
+    // Group each assistant+tool_calls message with its following tool result messages
+    const renderList: { messageIndex: number; toolResults?: string[] }[] = [];
+
+    let i = 0;
+    while (i < conversation.messages.length) {
+        const message = conversation.messages[i];
+        if (message.role === 'tool') {
+            i++;
+            continue;
+        }
+        if (message.role === 'assistant' && message.tool_calls?.length) {
+            const toolResults: string[] = [];
+            let j = i + 1;
+            while (j < conversation.messages.length && conversation.messages[j].role === 'tool') {
+                toolResults.push(conversation.messages[j].content);
+                j++;
+            }
+            renderList.push({ messageIndex: i, toolResults });
+            i = j;
+        } else {
+            renderList.push({ messageIndex: i });
+            i++;
+        }
+    }
+
     return (
         <div className='container-conversation'>
             <div className='area-conversation-messages'>
-            {
-                conversation.messages.map((message, index) => {
+            {renderList.map(({ messageIndex, toolResults }, renderIndex) => {
+                const message = conversation.messages[messageIndex];
                 return (
-                    <ChatMessage key={index} message={message} onEvent={onEvent ? (type) => onEvent(index, type) : undefined} isLatest={index === conversation.messages.length - 1} />
-                )
-                })
-            }
-            {
-                loading && <Loading />
-            }
+                    <ChatMessage
+                        key={messageIndex}
+                        message={message}
+                        toolResults={toolResults}
+                        onEvent={onEvent ? (type) => onEvent(messageIndex, type) : undefined}
+                        isLatest={renderIndex === renderList.length - 1}
+                    />
+                );
+            })}
+            {loading && <Loading />}
             </div>
         </div>
-    )
+    );
 }
 
 export default Conversation;

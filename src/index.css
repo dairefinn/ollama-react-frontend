@@ -183,3 +183,102 @@ select {
   line-height: 1.5;
   margin-top: 4px;
 }
+
+/* Tool calls */
+
+.toggle-tool-calls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #555;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+.toggle-tool-calls:hover {
+  color: #888;
+}
+
+.tool-calls-content {
+  padding: 8px 10px;
+  background: #1e1e24;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.tool-call-entry + .tool-call-entry {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #2a2a32;
+}
+
+.tool-call-args,
+.tool-call-result {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  color: #888;
+  font-family: monospace;
+}
+
+.tool-call-result {
+  margin-top: 6px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Memory page */
+
+.memory-page {
+  padding: 10px 0;
+}
+
+.memory-empty {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.memory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memory-card {
+  background: #2b2a33;
+  border: 1px solid #35393b;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.memory-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.memory-card-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #e8e6e3;
+}
+
+.memory-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memory-card-timestamp {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.memory-card-content {
+  font-size: 0.875rem;
+  color: #aaa;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}

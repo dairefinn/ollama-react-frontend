@@ -4,11 +4,13 @@ import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
 import { ArrowClockwise, CaretDown, CaretRight, Copy, Info, Rewind } from "@phosphor-icons/react";
+import { getToolFriendlyName } from "../../tools/built-in-tools";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
 interface ChatMessageProps {
     message: OllamaMessage;
+    toolResults?: string[];
     onEvent?: (event: ChatMessageEventType) => void;
     isLatest?: boolean;
 }
@@ -27,10 +29,11 @@ function extractThinkContent(text: string): [string, string] {
     return [messageParsed, thinkContext];
 }
 
-function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
+function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessageProps) {
     const [viewingContext, setViewingContext] = useState(false);
     const [systemExpanded, setSystemExpanded] = useState(false);
     const [messageContextExpanded, setMessageContextExpanded] = useState(false);
+    const [toolCallsExpanded, setToolCallsExpanded] = useState(false);
     const [messageParsed, thinkContext] = extractThinkContent(message.content);
 
     function toggleViewingContext() {
@@ -52,19 +55,6 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
             </div>
         );
     }
-
-    const renderAuthor = () => {
-        switch (message.role) {
-            case 'user':
-                return <strong>You</strong>;
-            case 'assistant':
-                return <strong>Assistant</strong>;
-            case 'tool':
-                return <strong>Tool</strong>;
-            default:
-                return <strong>Unknown</strong>;
-        }
-    };
 
     if (message.role === 'user') {
         return (
@@ -93,12 +83,7 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
     }
 
     return (
-        <div className={`chat-message chat-message-${message.role}`} >
-            {message.role !== 'user' && message.role !== 'assistant' && (
-                <div className='chat-message-author'>
-                    {renderAuthor()}
-                </div>
-            )}
+        <div className={`chat-message chat-message-${message.role}${message.tool_calls?.length ? ' chat-message--tool-call' : ''}`} >
             <div className="chat-message-content">
                 {/* TODO: Figure out how to improve word wrapping here for long strings */}
                 <Markdown remarkPlugins={[remarkGfm]}>{messageParsed}</Markdown>
@@ -108,8 +93,26 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
                         {viewingContext && <div className="think-content">{thinkContext}</div>}
                     </>
                 )}
+                {message.tool_calls?.length && (
+                    <>
+                        <div className='toggle-tool-calls' onClick={() => setToolCallsExpanded(!toolCallsExpanded)}>
+                            {toolCallsExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}
+                            {message.tool_calls.map(tc => getToolFriendlyName(tc.function.name)).join(', ')}
+                        </div>
+                        {toolCallsExpanded && (
+                            <div className="tool-calls-content">
+                                {message.tool_calls.map((tc, i) => (
+                                    <div key={i} className="tool-call-entry">
+                                        <pre className="tool-call-args">{JSON.stringify(tc.function.arguments, null, 2)}</pre>
+                                        {toolResults?.[i] && <pre className="tool-call-result">{toolResults[i]}</pre>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
-            {message.role === 'assistant' && (
+            {message.role === 'assistant' && !message.tool_calls?.length && (
                 <div className="chat-message-actions">
                     {onEvent !== undefined && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><Rewind size={14} /></button>}
                     {onEvent !== undefined && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwise size={14} /></button>}

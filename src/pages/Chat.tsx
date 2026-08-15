@@ -2,7 +2,7 @@ import { JSX, useEffect, useRef, useState } from "react";
 import { Broom, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
-import { OllamaMessage } from "../models/ollama-message.model";
+import { OllamaMessage, OllamaToolCall } from "../models/ollama-message.model";
 
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
 import { OllamaChatResponse } from "../api/queries/post-chat.query";
@@ -13,6 +13,7 @@ import { useAvailableModels } from "../utils/use-available-models";
 import { useSystemContext } from "../utils/use-system-context";
 import { useMessageContext } from "../utils/use-message-context";
 import { resolveContextVariables } from "../utils/resolve-context-variables";
+import { getToolDefinitions, executeTool } from "../tools/built-in-tools";
 
 
 function ChatPage(): JSX.Element
@@ -50,46 +51,49 @@ function ChatPage(): JSX.Element
     setQuestion('');
     setLoading(true);
 
-    OllamaAPI.chatStream(model, conversation)
-      .then(async (response) => {
-        conversation.addMessage(new OllamaMessage("", 'assistant'));
-        setConversation(new OllamaConversation(conversation.messages));
+    async function runAgentLoop(conv: OllamaConversation): Promise<void> {
+      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions());
+      conv.addMessage(new OllamaMessage("", 'assistant'));
+      setConversation(new OllamaConversation(conv.messages));
 
-        let thinkProcessed: boolean = false;
-        let hasSeenThinkTag: boolean = false;
+      let toolCalls: OllamaToolCall[] | undefined;
+      let thinkProcessed = false;
+      let hasSeenThinkTag = false;
 
-        ResponseStreamer.Stream(
-            response,
-            (chunk: string) => {
-              try {
-                const chunkResponse: OllamaChatResponse = JSON.parse(chunk) as OllamaChatResponse;
-                
-                // Check if this response uses think tags
-                if (chunkResponse.message.content.includes('<think>')) {
-                  hasSeenThinkTag = true;
-                }
-                
-                if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) {
-                  thinkProcessed = true;
-                }
-                
-                conversation.appendToLatestMessage(chunkResponse.message.content);
+      await ResponseStreamer.Stream(response, (chunk: string) => {
+        try {
+          const chunkResponse = JSON.parse(chunk) as OllamaChatResponse;
 
-                // Render UI updates: either after <think> tag is closed, or immediately if no think tags are used
-                if(thinkProcessed || !hasSeenThinkTag) {
-                  setConversation(new OllamaConversation(conversation.messages));
-                }
-              } catch (e) {
-                // Error handling for chunk parsing
-              }
-            }
-        );
+          if (chunkResponse.message.tool_calls?.length) {
+            toolCalls = chunkResponse.message.tool_calls;
+            conv.latestMessage.tool_calls = toolCalls;
+            setConversation(new OllamaConversation(conv.messages));
+            return;
+          }
 
-        if (textareaRef.current) {
-          textareaRef.current.focus();
+          if (chunkResponse.message.content.includes('<think>')) hasSeenThinkTag = true;
+          if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) thinkProcessed = true;
+
+          conv.appendToLatestMessage(chunkResponse.message.content);
+          if (thinkProcessed || !hasSeenThinkTag) {
+            setConversation(new OllamaConversation(conv.messages));
+          }
+        } catch {
+          // chunk parse error
         }
-      })
+      });
 
+      if (toolCalls?.length) {
+        for (const call of toolCalls) {
+          const result = executeTool(call);
+          conv.addMessage(new OllamaMessage(result, 'tool'));
+        }
+        setConversation(new OllamaConversation(conv.messages));
+        await runAgentLoop(conv);
+      }
+    }
+
+    runAgentLoop(conversation)
       .catch((e: Error) => {
         console.info("Caught error: ", e);
         alert(e.message);
@@ -97,9 +101,11 @@ function ChatPage(): JSX.Element
         conversation.undoLatestMessage();
         setConversation(new OllamaConversation(conversation.messages));
       })
-
       .finally(() => {
         setLoading(false);
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
       });
   }
 
@@ -157,16 +163,21 @@ function ChatPage(): JSX.Element
   function onConversationEvent(index: number, event: ConversationEventType): void {
 
     if (event === 'retry') {
-      const previousPrompt: string  = conversation.messages[index - 1].content || '';
-      conversation.revertToMessage(index - 2);
-      setConversation(new OllamaConversation(conversation.messages)); // Prompt Conversation component to re-render
+      let userIndex = index - 1;
+      while (userIndex >= 0 && conversation.messages[userIndex].role !== 'user') {
+        userIndex--;
+      }
+      if (userIndex < 0) return;
+      const previousPrompt = conversation.messages[userIndex].content || '';
+      conversation.revertToMessage(userIndex - 1);
+      setConversation(new OllamaConversation(conversation.messages));
       submitPrompt(previousPrompt);
       return;
     }
 
     if (event === 'revert') {
       conversation.revertToMessage(index);
-      setConversation(new OllamaConversation(conversation.messages)); // Prompt Conversation component to re-render
+      setConversation(new OllamaConversation(conversation.messages));
     }
   }
 

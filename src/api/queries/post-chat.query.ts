@@ -4,10 +4,15 @@ import { OllamaSupportedModel } from "../../models/ollama-supported-model.model"
 import { validatePrompt } from "../validators/query.validator";
 
 export type OllamaToolRequest = {
-    type: string;
+    type: "function";
     function: {
         name: string;
-        properties: unknown;
+        description: string;
+        parameters: {
+            type: "object";
+            properties: Record<string, unknown>;
+            required: string[];
+        };
     };
 };
 
