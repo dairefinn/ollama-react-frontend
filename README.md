@@ -1,6 +1,6 @@
 # Ollama React front-end
 
-<img width="2241" height="1064" alt="image" src="https://github.com/user-attachments/assets/6ff82c93-e6b0-4b00-951d-a22c4e730540" />
+<img width="1262" height="1374" alt="image" src="https://github.com/user-attachments/assets/c1224e40-75de-432b-a44e-0487283faa33" />
 
 A tool for interacting with locally hosted LLMs running on Ollama.
 
@@ -37,3 +37,5 @@ The most recent conversation and model used will be stored in your browser stora
 ### Context control
 
 You can configure context to be sent alongside the first message to a chat.
+
+You can also configure context to be sent alongside each message. The current timestamp will be sent by default.
