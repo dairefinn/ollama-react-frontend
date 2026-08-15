@@ -50,7 +50,10 @@ select {
 /* Prompt form */
 
 .area-prompt-form {
-  position: relative;
+  position: sticky;
+  bottom: 16px;
+  background-color: #242424;
+  margin-bottom: 20px;
 }
 
 .question-actions {
