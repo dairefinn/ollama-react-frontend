@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
-import { ArrowClockwise, Copy, Rewind } from "@phosphor-icons/react";
+import { ArrowClockwise, CaretDown, CaretRight, Copy, Rewind } from "@phosphor-icons/react";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
@@ -29,18 +29,33 @@ function extractThinkContent(text: string): [string, string] {
 
 function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
     const [viewingContext, setViewingContext] = useState(false);
+    const [systemExpanded, setSystemExpanded] = useState(false);
     const [messageParsed, thinkContext] = extractThinkContent(message.content);
 
     function toggleViewingContext() {
         setViewingContext(!viewingContext);
     }
 
+    if (message.role === 'system') {
+        return (
+            <div className="chat-message chat-message-system">
+                <div className="system-context-header" onClick={() => setSystemExpanded(!systemExpanded)}>
+                    {systemExpanded ? <CaretDown size={11} /> : <CaretRight size={11} />}
+                    <span>Initial context</span>
+                </div>
+                {systemExpanded && (
+                    <div className="system-context-body">
+                        <pre>{message.content}</pre>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     const renderAuthor = () => {
         switch (message.role) {
             case 'user':
                 return <strong>You</strong>;
-            case 'system':
-                return <strong>System</strong>;
             case 'assistant':
                 return <strong>Assistant</strong>;
             case 'tool':

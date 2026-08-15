@@ -4,6 +4,11 @@
     border-bottom: 1px solid #2F2F2F;
     background-color: #1F1F1F;
     padding: 10px;
+    align-items: center;
+}
+
+.navigation-link-settings {
+    margin-left: auto;
 }
 
 .navigation .navigation-link {

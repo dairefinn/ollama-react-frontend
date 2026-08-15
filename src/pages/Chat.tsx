@@ -10,6 +10,7 @@ import { ResponseStreamer } from "../utils/response-streaming-util";
 import { useModelStorage } from "../utils/use-model-storage";
 import { useConversationStorage } from "../utils/use-conversation-storage";
 import { useAvailableModels } from "../utils/use-available-models";
+import { useSystemContext } from "../utils/use-system-context";
 
 
 function ChatPage(): JSX.Element
@@ -19,6 +20,7 @@ function ChatPage(): JSX.Element
   const [model, setModel] = useModelStorage();
   const [conversation, setConversation] = useConversationStorage();
   const { models, loading: modelsLoading } = useAvailableModels();
+  const [systemContext] = useSystemContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -32,6 +34,10 @@ function ChatPage(): JSX.Element
   }
 
   function submitPrompt(prompt: string): void {
+    if (conversation.messages.length === 0 && systemContext.trim()) {
+      conversation.addMessage(new OllamaMessage(systemContext.trim(), 'system'));
+    }
+
     const newMessage = new OllamaMessage(prompt);
     conversation.addMessage(newMessage);
     setConversation(new OllamaConversation(conversation.messages));

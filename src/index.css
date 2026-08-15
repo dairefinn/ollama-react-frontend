@@ -117,3 +117,65 @@ select {
 .icon-btn:active {
   background-color: #383838;
 }
+
+/* Settings page */
+
+.settings-page {
+  padding: 10px 0;
+}
+
+.settings-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0 0 24px;
+  color: #e8e6e3;
+}
+
+.settings-section {
+  margin-bottom: 32px;
+}
+
+.settings-section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #2b2a33;
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ccc;
+}
+
+.settings-description {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+
+.settings-textarea {
+  display: block;
+  resize: vertical;
+  width: 100%;
+  border-radius: 6px;
+  outline: none;
+  padding: 10px 12px;
+  border: 1px solid #35393b;
+  background-color: #2b2a33;
+  color: #fbfbfe;
+  font-size: 0.875rem;
+  font-family: inherit;
+  line-height: 1.5;
+  margin-top: 4px;
+}

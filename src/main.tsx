@@ -6,7 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 
 import LayoutDefault from './layouts/LayoutDefault'
 import ChatPage from './pages/Chat'
-import QueryPage from './pages/Query'
+import SettingsPage from './pages/Settings'
 import Navigation from './components/Navigation/Navigation'
 
 createRoot(document.getElementById('root')!).render(
@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path='/' element={<LayoutDefault />}>
           <Route path='/chat' element={<ChatPage />} />
-          <Route path='/query' element={<QueryPage />} />
+<Route path='/settings' element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
