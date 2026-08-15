@@ -1,13 +1,13 @@
-import { JSX, useRef, useState } from "react";
+import { JSX, useEffect, useRef, useState } from "react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaMessage } from "../models/ollama-message.model";
-import { OllamaSupportedModel } from "../models/ollama-supported-model.model";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 
 import Conversation from "../components/Conversation/Conversation";
 import { OllamaGenerateResponse } from "../api/queries/post-generate.query";
 import { ResponseStreamer } from "../utils/response-streaming-util";
 import { useModelStorage } from "../utils/use-model-storage";
+import { useAvailableModels } from "../utils/use-available-models";
 
 
 function QueryPage(): JSX.Element
@@ -16,10 +16,17 @@ function QueryPage(): JSX.Element
     const [loading, setLoading] = useState<boolean>(false);
     const [model, setModel] = useModelStorage();
     const [conversation, setConversation] = useState<OllamaConversation>(new OllamaConversation());
+    const { models, loading: modelsLoading } = useAvailableModels();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
+    useEffect(() => {
+      if (models.length > 0 && !models.includes(model)) {
+        setModel(models[0]);
+      }
+    }, [models]);
+
     function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
-      setModel(e.target.value as OllamaSupportedModel);
+      setModel(e.target.value);
     }
   
     function onClickSubmit() {
@@ -88,12 +95,9 @@ function QueryPage(): JSX.Element
         <div className='area-prompt-form'>
           <div className='question-prompt'>
             <span>Ask</span>
-            <select className='model-select' value={model} onChange={onChangeModel}>
-              {
-                Object.values(OllamaSupportedModel).map(model => {
-                  return <option key={model} value={model}>{model}</option>
-                })
-              }
+            <select className='model-select' value={model} onChange={onChangeModel} disabled={modelsLoading}>
+              {modelsLoading && <option value=''>Loading models...</option>}
+              {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
             <span>something:</span>
           </div>
