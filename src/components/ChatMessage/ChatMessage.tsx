@@ -51,7 +51,7 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
 
     return (
         <div className={`chat-message chat-message-${message.role}`} >
-            {message.role !== 'user' && (
+            {message.role !== 'user' && message.role !== 'assistant' && (
                 <div className='chat-message-author'>
                     {renderAuthor()}
                 </div>

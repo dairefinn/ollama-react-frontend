@@ -96,7 +96,7 @@ function ChatPage(): JSX.Element
     if (e.key !== 'Enter') return;
 
     e.preventDefault();
-    onClickSubmit();
+    submitPrompt(question);
   }
 
   function clearChatHistory(): void {
