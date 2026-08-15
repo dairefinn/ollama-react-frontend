@@ -1,6 +1,6 @@
 # Ollama React front-end
 
-<img width="1262" height="1374" alt="image" src="https://github.com/user-attachments/assets/c1224e40-75de-432b-a44e-0487283faa33" />
+<img width="1262" height="1179" alt="image" src="https://github.com/user-attachments/assets/3ede87c5-f8c1-4650-be54-3902bbb0cd5b" />
 
 A tool for interacting with locally hosted LLMs running on Ollama.
 
@@ -39,3 +39,11 @@ The most recent conversation and model used will be stored in your browser stora
 You can configure context to be sent alongside the first message to a chat.
 
 You can also configure context to be sent alongside each message. The current timestamp will be sent by default.
+
+### Tools
+
+The chat has the ability to call tools. Currently there are some built in tools for interacting with it's memory.
+
+### Memory
+
+The agent can use some built-in tools to read and write memories.
