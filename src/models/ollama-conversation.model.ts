@@ -37,4 +37,11 @@ export class OllamaConversation {
         this.messages[this.messages.length - 1].content += content;
     }
 
+    public apiMessages(): { role: string; content: string }[] {
+        return this.messages.map(m => ({
+            role: m.role,
+            content: m.context ? `${m.content}\n\n<auto-context>\n${m.context}\n</auto-context>` : m.content,
+        }));
+    }
+
 }

@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
-import { ArrowClockwise, CaretDown, CaretRight, Copy, Rewind } from "@phosphor-icons/react";
+import { ArrowClockwise, CaretDown, CaretRight, Copy, Info, Rewind } from "@phosphor-icons/react";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
@@ -30,6 +30,7 @@ function extractThinkContent(text: string): [string, string] {
 function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
     const [viewingContext, setViewingContext] = useState(false);
     const [systemExpanded, setSystemExpanded] = useState(false);
+    const [messageContextExpanded, setMessageContextExpanded] = useState(false);
     const [messageParsed, thinkContext] = extractThinkContent(message.content);
 
     function toggleViewingContext() {
@@ -40,8 +41,8 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
         return (
             <div className="chat-message chat-message-system">
                 <div className="system-context-header" onClick={() => setSystemExpanded(!systemExpanded)}>
-                    {systemExpanded ? <CaretDown size={11} /> : <CaretRight size={11} />}
-                    <span>Initial context</span>
+                    {systemExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}
+                    <span>initial context</span>
                 </div>
                 {systemExpanded && (
                     <div className="system-context-body">
@@ -64,6 +65,32 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
                 return <strong>Unknown</strong>;
         }
     };
+
+    if (message.role === 'user') {
+        return (
+            <div className="chat-message chat-message-user">
+                <div className="user-bubble">
+                    <div className="chat-message-content">
+                        <Markdown remarkPlugins={[remarkGfm]}>{messageParsed}</Markdown>
+                    </div>
+                </div>
+                {message.context && (
+                    <div className={`message-context${messageContextExpanded ? ' message-context--open' : ''}`}>
+                            {messageContextExpanded && (
+                            <pre className="message-context-body">{message.context}</pre>
+                        )}
+                        <button
+                            className="message-context-toggle"
+                            title="Message context"
+                            onClick={() => setMessageContextExpanded(!messageContextExpanded)}
+                        >
+                            <Info size={12} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className={`chat-message chat-message-${message.role}`} >

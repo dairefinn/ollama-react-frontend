@@ -4,6 +4,7 @@ export class OllamaMessage {
 
     public role: OllamaMessageRole;
     public content: string;
+    public context?: string;
 
     constructor(prompt: string, role?: OllamaMessageRole) {
         this.content = prompt;

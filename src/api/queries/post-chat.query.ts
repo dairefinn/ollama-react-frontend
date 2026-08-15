@@ -54,7 +54,7 @@ export const queryPostChat = (baseUrl: string) => {
                 method: "POST",
                 body: JSON.stringify({
                     model: model,
-                    messages: conversation.messages,
+                    messages: conversation.apiMessages(),
                     tools: tools || [],
                     stream: false
                 } as OllamaChatRequest)

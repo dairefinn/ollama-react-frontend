@@ -1,5 +1,5 @@
 import { JSX, useEffect, useRef, useState } from "react";
-import { Broom, DownloadSimple } from "@phosphor-icons/react";
+import { Broom, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage } from "../models/ollama-message.model";
@@ -11,6 +11,8 @@ import { useModelStorage } from "../utils/use-model-storage";
 import { useConversationStorage } from "../utils/use-conversation-storage";
 import { useAvailableModels } from "../utils/use-available-models";
 import { useSystemContext } from "../utils/use-system-context";
+import { useMessageContext } from "../utils/use-message-context";
+import { resolveContextVariables } from "../utils/resolve-context-variables";
 
 
 function ChatPage(): JSX.Element
@@ -21,6 +23,7 @@ function ChatPage(): JSX.Element
   const [conversation, setConversation] = useConversationStorage();
   const { models, loading: modelsLoading } = useAvailableModels();
   const [systemContext] = useSystemContext();
+  const [messageContext] = useMessageContext();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -39,6 +42,8 @@ function ChatPage(): JSX.Element
     }
 
     const newMessage = new OllamaMessage(prompt);
+    const resolvedMessageContext = messageContext.trim() ? resolveContextVariables(messageContext.trim()) : '';
+    if (resolvedMessageContext) newMessage.context = resolvedMessageContext;
     conversation.addMessage(newMessage);
     setConversation(new OllamaConversation(conversation.messages));
 
@@ -168,7 +173,7 @@ function ChatPage(): JSX.Element
   return (
     <>
       <div className='area-button-actions'>
-        {conversation.messages.length === 0 && <button className='icon-btn' onClick={importChatHistory}>Import</button>}
+        {conversation.messages.length === 0 && <button className='icon-btn' title="Import chat history" onClick={importChatHistory}><UploadSimple size={20} /></button>}
         {conversation.messages.length > 0 && <button className='icon-btn' title="Clear chat history" onClick={clearChatHistory}><Broom size={20} /></button>}
         {conversation.messages.length > 0 && <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}><DownloadSimple size={20} /></button>}
       </div>

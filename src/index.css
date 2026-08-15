@@ -152,6 +152,10 @@ select {
   gap: 6px;
 }
 
+.settings-field + .settings-field {
+  margin-top: 24px;
+}
+
 .settings-label {
   font-size: 0.9rem;
   font-weight: 500;
