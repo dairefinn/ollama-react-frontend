@@ -184,6 +184,151 @@ select {
   margin-top: 4px;
 }
 
+.fs-permission-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid #35393b;
+  border-radius: 6px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.fs-permission-btn {
+  padding: 7px 20px;
+  background: #2b2a33;
+  color: #888;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  border-right: 1px solid #35393b;
+}
+
+.fs-permission-btn:last-child {
+  border-right: none;
+}
+
+.fs-permission-btn:hover {
+  background: #33323d;
+  color: #ccc;
+}
+
+.fs-permission-btn--active {
+  background: #3a3944;
+  color: #fbfbfe;
+  font-weight: 600;
+}
+
+.allowlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.allowlist-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  background: #2b2a33;
+  border: 1px solid #35393b;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.allowlist-entry-path {
+  font-size: 0.85rem;
+  font-family: monospace;
+  color: #ccc;
+  word-break: break-all;
+  flex: 1;
+}
+
+.allowlist-entry-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.allowlist-permission-group {
+  display: flex;
+  border: 1px solid #35393b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.allowlist-permission-btn {
+  padding: 4px 10px;
+  background: #1e1d26;
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  border-right: 1px solid #35393b;
+  cursor: pointer;
+}
+
+.allowlist-permission-btn:last-child {
+  border-right: none;
+}
+
+.allowlist-permission-btn:hover {
+  background: #2b2a33;
+  color: #aaa;
+}
+
+.allowlist-permission-btn--active {
+  background: #3a3944;
+  color: #fbfbfe;
+  font-weight: 600;
+}
+
+.allowlist-warning {
+  color: #e5a836;
+  flex-shrink: 0;
+}
+
+.allowlist-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-input {
+  flex: 1;
+  border-radius: 6px;
+  outline: none;
+  padding: 8px 12px;
+  border: 1px solid #35393b;
+  background-color: #2b2a33;
+  color: #fbfbfe;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.settings-error {
+  font-size: 0.8rem;
+  color: #e06c75;
+  margin: 4px 0 0;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  background-color: #303030;
+  color: #e8e6e3;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background-color: #3a3944;
+}
+
 /* Tool calls */
 
 .toggle-tool-calls {

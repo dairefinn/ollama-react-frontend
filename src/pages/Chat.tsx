@@ -14,6 +14,7 @@ import { useSystemContext } from "../utils/use-system-context";
 import { useMessageContext } from "../utils/use-message-context";
 import { resolveContextVariables } from "../utils/resolve-context-variables";
 import { getToolDefinitions, executeTool } from "../tools/built-in-tools";
+import { useFsPermission } from "../utils/use-fs-permission";
 
 
 function ChatPage(): JSX.Element
@@ -25,6 +26,7 @@ function ChatPage(): JSX.Element
   const { models, loading: modelsLoading } = useAvailableModels();
   const [systemContext] = useSystemContext();
   const [messageContext] = useMessageContext();
+  const [fsPermission] = useFsPermission();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ function ChatPage(): JSX.Element
     setLoading(true);
 
     async function runAgentLoop(conv: OllamaConversation): Promise<void> {
-      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions());
+      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions(fsPermission));
       conv.addMessage(new OllamaMessage("", 'assistant'));
       setConversation(new OllamaConversation(conv.messages));
 
@@ -85,7 +87,7 @@ function ChatPage(): JSX.Element
 
       if (toolCalls?.length) {
         for (const call of toolCalls) {
-          const result = executeTool(call);
+          const result = await executeTool(call);
           conv.addMessage(new OllamaMessage(result, 'tool'));
         }
         setConversation(new OllamaConversation(conv.messages));

@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+fs-allowlist.json
 
 # Editor directories and files
 .vscode/*

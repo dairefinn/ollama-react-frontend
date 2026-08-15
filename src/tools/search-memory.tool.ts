@@ -18,7 +18,7 @@ export const searchMemoryTool: BuiltInTool = {
             }
         }
     },
-    execute: ({ query }) => {
+    execute: async ({ query }) => {
         const q = (query as string).toLowerCase();
         try {
             const memories: { id: string; title: string; content: string }[] =

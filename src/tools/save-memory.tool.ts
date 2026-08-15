@@ -19,7 +19,7 @@ export const saveMemoryTool: BuiltInTool = {
             }
         }
     },
-    execute: ({ title, content }) => {
+    execute: async ({ title, content }) => {
         const t = title as string;
         const c = content as string;
         try {

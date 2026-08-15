@@ -18,7 +18,7 @@ export const readMemoryTool: BuiltInTool = {
             }
         }
     },
-    execute: ({ id }) => {
+    execute: async ({ id }) => {
         try {
             const memories: { id: string; title: string; content: string; timestamp: string }[] =
                 JSON.parse(localStorage.getItem(MEMORIES_KEY) || '[]');
