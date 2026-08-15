@@ -1,8 +1,9 @@
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
-import { ArrowClockwise, Rewind } from "@phosphor-icons/react";
+import { ArrowClockwise, Copy, Rewind } from "@phosphor-icons/react";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
@@ -58,7 +59,7 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
             )}
             <div className="chat-message-content">
                 {/* TODO: Figure out how to improve word wrapping here for long strings */}
-                <Markdown>{messageParsed}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>{messageParsed}</Markdown>
                 {thinkContext && thinkContext.length > 2 && (
                     <>
                         <div className='toggle-think-context' onClick={toggleViewingContext}>Toggle thinking context</div>
@@ -66,10 +67,11 @@ function ChatMessage({ message, onEvent, isLatest }: ChatMessageProps) {
                     </>
                 )}
             </div>
-            {onEvent !== undefined && (
+            {message.role === 'assistant' && (
                 <div className="chat-message-actions">
-                    {message.role === 'assistant' && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><Rewind size={14} /></button>}
-                    {message.role === 'assistant' && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwise size={14} /></button>}
+                    {onEvent !== undefined && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><Rewind size={14} /></button>}
+                    {onEvent !== undefined && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwise size={14} /></button>}
+                    <button className="chat-message-action-btn" title="Copy markdown" onClick={() => navigator.clipboard.writeText(message.content)}><Copy size={14} /></button>
                 </div>
             )}
         </div>
