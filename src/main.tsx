@@ -14,13 +14,16 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <Navigation />
-      <Routes>
-        <Route path='/' element={<LayoutDefault />}>
+      <div className="content-area">
+        <Routes>
+          <Route path='/' element={<LayoutDefault />}>
+            <Route path='/memory' element={<MemoryPage />} />
+            <Route path='/settings' element={<SettingsPage />} />
+          </Route>
           <Route path='/chat' element={<ChatPage />} />
-          <Route path='/memory' element={<MemoryPage />} />
-<Route path='/settings' element={<SettingsPage />} />
-        </Route>
-      </Routes>
+          <Route path='/chat/:id' element={<ChatPage />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   </StrictMode>,
 )

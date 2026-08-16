@@ -24,3 +24,12 @@ export async function writeStorageFile(filename: string, content: string): Promi
         body: JSON.stringify({ path: dir + '/' + filename, content }),
     });
 }
+
+export async function deleteStorageFile(filename: string): Promise<void> {
+    const dir = await getDataDir();
+    await fetch('/api/fs/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: dir + '/' + filename }),
+    });
+}

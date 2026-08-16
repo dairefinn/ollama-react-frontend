@@ -130,6 +130,12 @@ export function fsMiddlewarePlugin(): Plugin {
                         fs.writeFileSync(p, content, 'utf-8');
                         return sendJson(res, 200, { ok: true });
                     }
+                    if (route === '/api/fs/delete' && method === 'POST') {
+                        const { path: p } = JSON.parse(await readBody(req)) as { path: string };
+                        if (!isPathAllowed(p, readAllowlist(), 'write')) return sendJson(res, 403, { error: 'Path not in allowlist or permission is read-only' });
+                        fs.unlinkSync(p);
+                        return sendJson(res, 200, { ok: true });
+                    }
                     if (route === '/api/fs/mkdir' && method === 'POST') {
                         const { path: p } = JSON.parse(await readBody(req)) as { path: string };
                         if (!isPathAllowed(p, readAllowlist(), 'write')) return sendJson(res, 403, { error: 'Path not in allowlist or permission is read-only' });

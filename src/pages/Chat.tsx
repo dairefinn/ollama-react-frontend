@@ -1,28 +1,43 @@
+import './Chat.css';
+
 import { JSX, useEffect, useRef, useState } from "react";
-import { BroomIcon, DownloadSimpleIcon, StopIcon, UploadSimpleIcon } from "@phosphor-icons/react";
+import { useNavigate, useParams } from "react-router";
+import { DownloadSimpleIcon, StopIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage, OllamaToolCall } from "../models/ollama-message.model";
 
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
+import ConversationList from "../components/ConversationList/ConversationList";
 import { OllamaChatResponse } from "../api/queries/post-chat.query";
 import { ResponseStreamer } from "../utils/response-streaming-util";
 import { useModelStorage } from "../utils/use-model-storage";
 import { useConversationStorage } from "../utils/use-conversation-storage";
+import { useConversations } from "../utils/use-conversations";
 import { useAvailableModels } from "../utils/use-available-models";
 import { useSystemContext } from "../utils/use-system-context";
 import { useMessageContext } from "../utils/use-message-context";
 import { resolveContextVariables } from "../utils/resolve-context-variables";
 import { getToolDefinitions, executeTool } from "../tools/built-in-tools";
 import { useFsPermission } from "../utils/use-fs-permission";
+import { writeStorageFile } from "../utils/fs-storage";
 
 
-function ChatPage(): JSX.Element
-{
+function ChatPage(): JSX.Element {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!id) {
+      navigate('/chat/' + crypto.randomUUID(), { replace: true });
+    }
+  }, [id, navigate]);
+
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [model, setModel] = useModelStorage();
-  const [conversation, setConversation] = useConversationStorage();
+  const [conversation, setConversation] = useConversationStorage(id ?? '');
+  const { conversations, upsertConversation, deleteConversation } = useConversations();
   const { models, loading: modelsLoading } = useAvailableModels();
   const [systemContext] = useSystemContext();
   const [messageContext] = useMessageContext();
@@ -40,7 +55,20 @@ function ChatPage(): JSX.Element
     setModel(e.target.value);
   }
 
+  function deriveTitle(conv: OllamaConversation): string {
+    const firstUser = conv.messages.find(m => m.role === 'user');
+    if (!firstUser?.content) return 'New Chat';
+    const text = firstUser.content.trim();
+    return text.length > 50 ? text.slice(0, 50) + '…' : text;
+  }
+
+  function newChat(): void {
+    navigate('/chat/' + crypto.randomUUID());
+  }
+
   function submitPrompt(prompt: string): void {
+    if (!id) return;
+
     if (conversation.messages.length === 0 && systemContext.trim()) {
       conversation.addMessage(new OllamaMessage(systemContext.trim(), 'system'));
     }
@@ -50,6 +78,15 @@ function ChatPage(): JSX.Element
     if (resolvedMessageContext) newMessage.context = resolvedMessageContext;
     conversation.addMessage(newMessage);
     setConversation(new OllamaConversation(conversation.messages));
+
+    const now = new Date().toISOString();
+    const existing = conversations.find(c => c.id === id);
+    upsertConversation({
+      id,
+      title: existing?.title ?? deriveTitle(conversation),
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    });
 
     setQuestion('');
     setLoading(true);
@@ -118,7 +155,6 @@ function ChatPage(): JSX.Element
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key !== 'Enter') return;
-
     e.preventDefault();
     submitPrompt(question);
   }
@@ -127,52 +163,44 @@ function ChatPage(): JSX.Element
     abortControllerRef.current?.abort();
   }
 
-  function clearChatHistory(): void {
-    setConversation(new OllamaConversation());
-  }
-
   function exportChatHistory(): void {
     const blob = new Blob([JSON.stringify(conversation)], { type: 'application/json' });
-
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `chat-history-${model}-${new Date().toISOString()}.json`;
-
     a.click();
     a.remove();
   }
 
   function importChatHistory(): void {
     const input = document.createElement('input');
-
     input.type = 'file';
     input.accept = '.json';
-
     input.onchange = (event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const content = e.target?.result as string;
         try {
-          const importedConversationJson = JSON.parse(content) as OllamaConversation;
-          const importedConversation = new OllamaConversation(importedConversationJson.messages);
-          setConversation(importedConversation);
+          const importedJson = JSON.parse(content) as OllamaConversation;
+          const importedConversation = new OllamaConversation(importedJson.messages);
+          const newId = crypto.randomUUID();
+          const now = new Date().toISOString();
+          await writeStorageFile(`conversations/${newId}.json`, JSON.stringify(importedConversation));
+          upsertConversation({ id: newId, title: deriveTitle(importedConversation), createdAt: now, updatedAt: now });
+          navigate('/chat/' + newId);
           input.remove();
         } catch {
           alert('Invalid chat history file');
         }
       };
-
       reader.readAsText(file);
     };
-
     input.click();
   }
 
   function onConversationEvent(index: number, event: ConversationEventType): void {
-
     if (event === 'retry') {
       let userIndex = index - 1;
       while (userIndex >= 0 && conversation.messages[userIndex].role !== 'user') {
@@ -192,32 +220,62 @@ function ChatPage(): JSX.Element
     }
   }
 
-  return (
-    <>
-      <div className='area-button-actions'>
-        {conversation.messages.length === 0 && <button className='icon-btn' title="Import chat history" onClick={importChatHistory}><UploadSimpleIcon size={20} /></button>}
-        {conversation.messages.length > 0 && <button className='icon-btn' title="Clear chat history" onClick={clearChatHistory}><BroomIcon size={20} /></button>}
-        {conversation.messages.length > 0 && <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}><DownloadSimpleIcon size={20} /></button>}
-      </div>
+  function handleDeleteConversation(convId: string): void {
+    deleteConversation(convId);
+    if (convId === id) {
+      newChat();
+    }
+  }
 
-      <Conversation conversation={conversation} loading={loading} onEvent={onConversationEvent} />
-      
-      <div className='area-prompt-form'>
-        <textarea ref={textareaRef} className='question-textarea' value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Type your question here" onKeyDown={onKeyDown} />
-        <div className='question-actions'>
-          <select className='model-select' value={model} onChange={onChangeModel} disabled={modelsLoading}>
-            {modelsLoading && <option value=''>Loading models...</option>}
-            {models.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+  return (
+    <div className="chat-layout">
+      <ConversationList
+        conversations={conversations}
+        currentId={id}
+        onNew={newChat}
+        onSelect={(convId) => navigate(`/chat/${convId}`)}
+        onDelete={handleDeleteConversation}
+      />
+      <div className="chat-main">
+        <div className='area-button-actions'>
+          {conversation.messages.length === 0 && (
+            <button className='icon-btn' title="Import chat history" onClick={importChatHistory}>
+              <UploadSimpleIcon size={20} />
+            </button>
+          )}
+          {conversation.messages.length > 0 && (
+            <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}>
+              <DownloadSimpleIcon size={20} />
+            </button>
+          )}
         </div>
-        {loading && (
-          <button className='stop-btn' title="Stop generation" onClick={stopChat}>
-            <StopIcon size={16} />
-          </button>
-        )}
+
+        <Conversation conversation={conversation} loading={loading} onEvent={onConversationEvent} />
+
+        <div className='area-prompt-form'>
+          <textarea
+            ref={textareaRef}
+            className='question-textarea'
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Type your question here"
+            onKeyDown={onKeyDown}
+          />
+          <div className='question-actions'>
+            <select className='model-select' value={model} onChange={onChangeModel} disabled={modelsLoading}>
+              {modelsLoading && <option value=''>Loading models...</option>}
+              {models.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          {loading && (
+            <button className='stop-btn' title="Stop generation" onClick={stopChat}>
+              <StopIcon size={16} />
+            </button>
+          )}
+        </div>
       </div>
-    </>
-  )
+    </div>
+  );
 }
 
 export default ChatPage;
