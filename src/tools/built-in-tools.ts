@@ -9,6 +9,7 @@ import { listDirectoryTool } from "./list-directory.tool";
 import { searchFilesTool } from "./search-files.tool";
 import { writeFileTool } from "./write-file.tool";
 import { createDirectoryTool } from "./create-directory.tool";
+import { deleteMemoryTool } from "./delete-memory.tool";
 
 const BUILT_IN_TOOLS: BuiltInTool[] = [
     saveMemoryTool,
@@ -19,6 +20,7 @@ const BUILT_IN_TOOLS: BuiltInTool[] = [
     searchFilesTool,
     writeFileTool,
     createDirectoryTool,
+    deleteMemoryTool,
 ];
 
 export function getToolDefinitions(fsPermission: FsPermission): OllamaToolRequest[] {

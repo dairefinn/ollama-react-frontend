@@ -18,7 +18,7 @@ export const searchMemoryTool: BuiltInTool = {
             }
         }
     },
-    renderLabel: ({ query }) => `Searching memories for "${String(query)}"`,
+    renderLabel: ({ query }) => query ? `Recalling memories about ${String(query)}` : `Recalling all memories`,
     execute: async ({ query }) => {
         const q = (query as string).toLowerCase();
         try {
