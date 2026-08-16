@@ -1,5 +1,5 @@
 import { JSX, useEffect, useRef, useState } from "react";
-import { Broom, DownloadSimple, Stop, UploadSimple } from "@phosphor-icons/react";
+import { BroomIcon, DownloadSimpleIcon, StopIcon, UploadSimpleIcon } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage, OllamaToolCall } from "../models/ollama-message.model";
@@ -195,9 +195,9 @@ function ChatPage(): JSX.Element
   return (
     <>
       <div className='area-button-actions'>
-        {conversation.messages.length === 0 && <button className='icon-btn' title="Import chat history" onClick={importChatHistory}><UploadSimple size={20} /></button>}
-        {conversation.messages.length > 0 && <button className='icon-btn' title="Clear chat history" onClick={clearChatHistory}><Broom size={20} /></button>}
-        {conversation.messages.length > 0 && <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}><DownloadSimple size={20} /></button>}
+        {conversation.messages.length === 0 && <button className='icon-btn' title="Import chat history" onClick={importChatHistory}><UploadSimpleIcon size={20} /></button>}
+        {conversation.messages.length > 0 && <button className='icon-btn' title="Clear chat history" onClick={clearChatHistory}><BroomIcon size={20} /></button>}
+        {conversation.messages.length > 0 && <button className='icon-btn' title="Export chat history" onClick={exportChatHistory}><DownloadSimpleIcon size={20} /></button>}
       </div>
 
       <Conversation conversation={conversation} loading={loading} onEvent={onConversationEvent} />
@@ -212,7 +212,7 @@ function ChatPage(): JSX.Element
         </div>
         {loading && (
           <button className='stop-btn' title="Stop generation" onClick={stopChat}>
-            <Stop size={16} />
+            <StopIcon size={16} />
           </button>
         )}
       </div>

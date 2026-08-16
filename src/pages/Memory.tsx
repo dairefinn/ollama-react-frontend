@@ -1,5 +1,5 @@
 import { JSX } from "react";
-import { Trash } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMemoryStorage } from "../utils/use-memory-storage";
 
 function MemoryPage(): JSX.Element {
@@ -19,7 +19,7 @@ function MemoryPage(): JSX.Element {
                             <div className="memory-card-actions">
                                 <span className="memory-card-timestamp">{new Date(memory.timestamp).toLocaleString()}</span>
                                 <button className="icon-btn" title="Delete memory" onClick={() => deleteMemory(memory.id)}>
-                                    <Trash size={16} />
+                                    <TrashIcon size={16} />
                                 </button>
                             </div>
                         </div>

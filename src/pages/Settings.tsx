@@ -1,5 +1,5 @@
 import { JSX, useState } from "react";
-import { Trash, Warning } from "@phosphor-icons/react";
+import { TrashIcon, WarningIcon } from "@phosphor-icons/react";
 import { useSystemContext } from "../utils/use-system-context";
 import { useMessageContext } from "../utils/use-message-context";
 import { useFsAllowlist } from "../utils/use-fs-allowlist";
@@ -91,7 +91,7 @@ function SettingsPage(): JSX.Element {
                                     <div className="allowlist-entry-actions">
                                         {entry.permission === 'write' && fsPermission === 'read' && (
                                             <span className="allowlist-warning" title="Write permission has no effect while global access is set to Read">
-                                                <Warning size={16} />
+                                                <WarningIcon size={16} />
                                             </span>
                                         )}
                                         <div className="allowlist-permission-group">
@@ -106,7 +106,7 @@ function SettingsPage(): JSX.Element {
                                             ))}
                                         </div>
                                         <button className="icon-btn" title="Remove" onClick={() => void removeEntry(entry.path)}>
-                                            <Trash size={16} />
+                                            <TrashIcon size={16} />
                                         </button>
                                     </div>
                                 </div>

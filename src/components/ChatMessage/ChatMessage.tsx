@@ -3,7 +3,7 @@ import remarkGfm from "remark-gfm";
 import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
-import { ArrowClockwise, CaretDown, CaretRight, Copy, Info, Rewind } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon, CaretDownIcon, CaretRightIcon, CopyIcon, InfoIcon, RewindIcon } from "@phosphor-icons/react";
 import { getToolLabel } from "../../tools/built-in-tools";
 
 export type ChatMessageEventType = 'retry' | 'revert';
@@ -44,7 +44,7 @@ function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessagePro
         return (
             <div className="chat-message chat-message-system">
                 <div className="system-context-header" onClick={() => setSystemExpanded(!systemExpanded)}>
-                    {systemExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}
+                    {systemExpanded ? <CaretDownIcon size={10} /> : <CaretRightIcon size={10} />}
                     <span>initial context</span>
                 </div>
                 {systemExpanded && (
@@ -74,7 +74,7 @@ function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessagePro
                             title="Message context"
                             onClick={() => setMessageContextExpanded(!messageContextExpanded)}
                         >
-                            <Info size={12} />
+                            <InfoIcon size={12} />
                         </button>
                     </div>
                 )}
@@ -96,7 +96,7 @@ function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessagePro
                 {message.tool_calls?.length && (
                     <>
                         <div className='toggle-tool-calls' onClick={() => setToolCallsExpanded(!toolCallsExpanded)}>
-                            {toolCallsExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}
+                            {toolCallsExpanded ? <CaretDownIcon size={10} /> : <CaretRightIcon size={10} />}
                             {message.tool_calls.map(tc => getToolLabel(tc.function.name, tc.function.arguments)).join(', ')}
                         </div>
                         {toolCallsExpanded && (
@@ -114,9 +114,9 @@ function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessagePro
             </div>
             {message.role === 'assistant' && !message.tool_calls?.length && (
                 <div className="chat-message-actions">
-                    {onEvent !== undefined && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><Rewind size={14} /></button>}
-                    {onEvent !== undefined && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwise size={14} /></button>}
-                    <button className="chat-message-action-btn" title="Copy markdown" onClick={() => navigator.clipboard.writeText(message.content)}><Copy size={14} /></button>
+                    {onEvent !== undefined && !isLatest && <button className="chat-message-action-btn" title="Rewind to this message" onClick={() => onEvent('revert')}><RewindIcon size={14} /></button>}
+                    {onEvent !== undefined && isLatest && <button className="chat-message-action-btn" title="Generate again" onClick={() => onEvent('retry')}><ArrowClockwiseIcon size={14} /></button>}
+                    <button className="chat-message-action-btn" title="Copy markdown" onClick={() => navigator.clipboard.writeText(message.content)}><CopyIcon size={14} /></button>
                 </div>
             )}
         </div>
