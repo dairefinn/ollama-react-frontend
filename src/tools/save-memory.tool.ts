@@ -1,6 +1,5 @@
 import { BuiltInTool } from "./tool.types";
-
-const MEMORIES_KEY = 'ollama-memories';
+import { readStorageFile, writeStorageFile } from "../utils/fs-storage";
 
 export const saveMemoryTool: BuiltInTool = {
     friendlyName: "Save memory",
@@ -24,9 +23,10 @@ export const saveMemoryTool: BuiltInTool = {
         const t = title as string;
         const c = content as string;
         try {
-            const memories = JSON.parse(localStorage.getItem(MEMORIES_KEY) || '[]');
+            const existing = await readStorageFile('memories.json');
+            const memories = existing ? JSON.parse(existing) : [];
             memories.push({ id: crypto.randomUUID(), title: t, content: c, timestamp: new Date().toISOString() });
-            localStorage.setItem(MEMORIES_KEY, JSON.stringify(memories));
+            await writeStorageFile('memories.json', JSON.stringify(memories));
         } catch {
             return `Failed to save memory: "${t}"`;
         }

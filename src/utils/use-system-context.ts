@@ -1,22 +1,20 @@
-import { useState, useEffect } from 'react';
-
-const STORAGE_KEY = 'ollama-system-context';
+import { useState, useEffect, useRef } from 'react';
+import { readStorageFile, writeStorageFile } from './fs-storage';
 
 export function useSystemContext(): [string, (context: string) => void] {
-  const [systemContext, setSystemContextState] = useState<string>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) ?? '';
-    } catch {
-      return '';
-    }
-  });
+  const [systemContext, setSystemContextState] = useState<string>('');
+  const loaded = useRef(false);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, systemContext);
-    } catch {
-      // ignore
-    }
+    readStorageFile('system-context.txt').then(content => {
+      if (content !== null) setSystemContextState(content);
+      loaded.current = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!loaded.current) return;
+    writeStorageFile('system-context.txt', systemContext);
   }, [systemContext]);
 
   return [systemContext, setSystemContextState];

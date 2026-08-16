@@ -1,6 +1,5 @@
 import { BuiltInTool } from "./tool.types";
-
-const MEMORIES_KEY = 'ollama-memories';
+import { readStorageFile, writeStorageFile } from "../utils/fs-storage";
 
 export const deleteMemoryTool: BuiltInTool = {
     friendlyName: "Delete memory",
@@ -22,12 +21,13 @@ export const deleteMemoryTool: BuiltInTool = {
     execute: async ({ id }) => {
         const targetId = id as string;
         try {
-            const memories = JSON.parse(localStorage.getItem(MEMORIES_KEY) || '[]');
+            const existing = await readStorageFile('memories.json');
+            const memories = existing ? JSON.parse(existing) : [];
             const filtered = memories.filter((m: { id: string }) => m.id !== targetId);
             if (filtered.length === memories.length) {
                 return `No memory found with id: "${targetId}"`;
             }
-            localStorage.setItem(MEMORIES_KEY, JSON.stringify(filtered));
+            await writeStorageFile('memories.json', JSON.stringify(filtered));
             return `Memory deleted: "${targetId}"`;
         } catch {
             return `Failed to delete memory: "${targetId}"`;

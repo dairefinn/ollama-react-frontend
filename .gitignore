@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 fs-allowlist.json
+data/
 
 # Editor directories and files
 .vscode/*

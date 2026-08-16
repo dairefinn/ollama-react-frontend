@@ -1,6 +1,5 @@
 import { BuiltInTool } from "./tool.types";
-
-const MEMORIES_KEY = 'ollama-memories';
+import { readStorageFile } from "../utils/fs-storage";
 
 export const searchMemoryTool: BuiltInTool = {
     friendlyName: "Search memory",
@@ -22,8 +21,9 @@ export const searchMemoryTool: BuiltInTool = {
     execute: async ({ query }) => {
         const q = (query as string).toLowerCase();
         try {
+            const existing = await readStorageFile('memories.json');
             const memories: { id: string; title: string; content: string }[] =
-                JSON.parse(localStorage.getItem(MEMORIES_KEY) || '[]');
+                existing ? JSON.parse(existing) : [];
             const matches = memories.filter(
                 m => m.title.toLowerCase().includes(q) || m.content.toLowerCase().includes(q)
             );

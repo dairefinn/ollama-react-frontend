@@ -7,8 +7,38 @@
     align-items: center;
 }
 
-.navigation-link-settings {
+.navigation-end {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ollama-status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #555;
+    flex-shrink: 0;
+}
+
+.ollama-status-dot[data-status="online"] {
+    background-color: #89ca78;
+}
+
+.ollama-status-dot[data-status="offline"] {
+    background-color: #e06c75;
+}
+
+.ollama-status-dot[data-status="checking"] {
+    background-color: #555;
+    animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
 }
 
 .navigation .navigation-link {

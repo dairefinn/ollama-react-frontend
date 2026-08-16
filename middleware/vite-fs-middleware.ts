@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const ALLOWLIST_PATH = path.resolve(process.cwd(), 'fs-allowlist.json');
+const DATA_DIR = path.resolve(process.cwd(), 'data');
 const MAX_SEARCH_RESULTS = 100;
 
 type AllowlistEntry = { path: string; permission: 'read' | 'write' };
@@ -26,6 +27,8 @@ function writeAllowlist(entries: AllowlistEntry[]): void {
 
 function isPathAllowed(target: string, allowlist: AllowlistEntry[], operation: 'read' | 'write'): boolean {
     const norm = path.normalize(target);
+    const normDataDir = path.normalize(DATA_DIR);
+    if (norm === normDataDir || norm.startsWith(normDataDir + path.sep)) return true;
     return allowlist.some(e => {
         const ne = path.normalize(e.path);
         const pathMatch = norm === ne || norm.startsWith(ne + path.sep);
@@ -79,6 +82,9 @@ export function fsMiddlewarePlugin(): Plugin {
                 const route = url.pathname;
                 const method = req.method?.toUpperCase() ?? 'GET';
                 try {
+                    if (route === '/api/fs/data-dir' && method === 'GET') {
+                        return sendJson(res, 200, { path: path.resolve(process.cwd(), 'data') });
+                    }
                     if (route === '/api/fs/allowlist' && method === 'GET') {
                         return sendJson(res, 200, readAllowlist());
                     }

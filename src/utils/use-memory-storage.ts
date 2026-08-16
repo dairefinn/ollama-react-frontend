@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { readStorageFile, writeStorageFile } from "./fs-storage";
 
 export type Memory = {
     id: string;
@@ -7,34 +8,35 @@ export type Memory = {
     timestamp: string;
 };
 
-const STORAGE_KEY = 'ollama-memories';
+export function useMemoryStorage(): [Memory[], (title: string, content: string) => Promise<void>, (id: string) => Promise<void>] {
+    const [memories, setMemories] = useState<Memory[]>([]);
 
-function readMemories(): Memory[] {
-    try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    } catch {
-        return [];
-    }
-}
+    useEffect(() => {
+        readStorageFile('memories.json').then(content => {
+            if (content) {
+                try { setMemories(JSON.parse(content)); } catch { /* ignore */ }
+            }
+        });
+    }, []);
 
-export function useMemoryStorage(): [Memory[], (title: string, content: string) => void, (id: string) => void] {
-    const [memories, setMemories] = useState<Memory[]>(readMemories);
-
-    function addMemory(title: string, content: string): void {
-        const newMemory: Memory = {
+    async function addMemory(title: string, content: string): Promise<void> {
+        const existing = await readStorageFile('memories.json');
+        const current: Memory[] = existing ? JSON.parse(existing) : [];
+        const updated = [...current, {
             id: crypto.randomUUID(),
             title,
             content,
             timestamp: new Date().toISOString(),
-        };
-        const updated = [...memories, newMemory];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        }];
+        await writeStorageFile('memories.json', JSON.stringify(updated));
         setMemories(updated);
     }
 
-    function deleteMemory(id: string): void {
-        const updated = memories.filter(m => m.id !== id);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    async function deleteMemory(id: string): Promise<void> {
+        const existing = await readStorageFile('memories.json');
+        const current: Memory[] = existing ? JSON.parse(existing) : [];
+        const updated = current.filter(m => m.id !== id);
+        await writeStorageFile('memories.json', JSON.stringify(updated));
         setMemories(updated);
     }
 

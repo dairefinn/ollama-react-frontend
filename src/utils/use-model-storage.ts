@@ -1,23 +1,20 @@
-import { useState, useEffect } from 'react';
-
-const STORAGE_KEY = 'ollama-active-model';
+import { useState, useEffect, useRef } from 'react';
+import { readStorageFile, writeStorageFile } from './fs-storage';
 
 export function useModelStorage(): [string, (model: string) => void] {
-  const [model, setModelState] = useState<string>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) ?? '';
-    } catch (error) {
-      console.warn('Failed to read model from localStorage:', error);
-      return '';
-    }
-  });
+  const [model, setModelState] = useState<string>('');
+  const loaded = useRef(false);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, model);
-    } catch (error) {
-      console.warn('Failed to save model to localStorage:', error);
-    }
+    readStorageFile('model.txt').then(content => {
+      if (content !== null) setModelState(content);
+      loaded.current = true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!loaded.current) return;
+    writeStorageFile('model.txt', model);
   }, [model]);
 
   return [model, setModelState];
