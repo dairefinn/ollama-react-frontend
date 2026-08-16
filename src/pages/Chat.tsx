@@ -3,14 +3,11 @@ import './Chat.css';
 import { JSX, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { DownloadSimpleIcon, StopIcon, UploadSimpleIcon } from "@phosphor-icons/react";
-import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage, OllamaToolCall } from "../models/ollama-message.model";
 
 import Conversation, { ConversationEventType } from "../components/Conversation/Conversation";
 import ConversationList from "../components/ConversationList/ConversationList";
-import { OllamaChatResponse } from "../api/queries/post-chat.query";
-import { ResponseStreamer } from "../utils/response-streaming-util";
 import { useModelStorage } from "../utils/use-model-storage";
 import { useConversationStorage } from "../utils/use-conversation-storage";
 import { useConversations } from "../utils/use-conversations";
@@ -18,10 +15,11 @@ import { useAvailableModels } from "../utils/use-available-models";
 import { useSystemContext } from "../utils/use-system-context";
 import { useMessageContext } from "../utils/use-message-context";
 import { resolveContextVariables } from "../utils/resolve-context-variables";
-import { getToolDefinitions, executeTool } from "../tools/built-in-tools";
+import { getToolDefinitions } from "../tools/built-in-tools";
 import { useFsPermission } from "../utils/use-fs-permission";
 import { writeStorageFile } from "../utils/fs-storage";
 
+type AgentStatus = { status: 'idle' | 'running' | 'done' | 'error' | 'aborted'; eventCount: number; partial: string | null };
 
 function ChatPage(): JSX.Element {
   const { id } = useParams<{ id: string }>();
@@ -36,20 +34,140 @@ function ChatPage(): JSX.Element {
   const [question, setQuestion] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [model, setModel] = useModelStorage();
-  const [conversation, setConversation] = useConversationStorage(id ?? '');
+  const [savedConversation, setSavedConversation, reloadConversation] = useConversationStorage(id ?? '');
   const { conversations, upsertConversation, deleteConversation } = useConversations();
   const { models, loading: modelsLoading } = useAvailableModels();
   const [systemContext] = useSystemContext();
   const [messageContext] = useMessageContext();
   const [fsPermission] = useFsPermission();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Live conversation state built from SSE events (null = show savedConversation)
+  const [streamConversation, setStreamConversation] = useState<OllamaConversation | null>(null);
+  const liveConvRef = useRef<OllamaConversation>(new OllamaConversation());
+  const sseRef = useRef<EventSource | null>(null);
+
+  // Think-tag state: track per assistant message to avoid re-renders mid-think
+  const thinkRef = useRef({ seen: false, processed: false });
+
+  const conversation = streamConversation ?? savedConversation;
 
   useEffect(() => {
     if (models.length > 0 && !models.includes(model)) {
       setModel(models[0]);
     }
   }, [models, model, setModel]);
+
+  // On mount or id change: check if agent is already running, reconnect if so
+  useEffect(() => {
+    if (!id) return;
+    setStreamConversation(null);
+    sseRef.current?.close();
+    sseRef.current = null;
+
+    const checkAndReconnect = async () => {
+      try {
+        const agentStatus = await fetch(`/api/agent/status/${encodeURIComponent(id)}`).then(r => r.json() as Promise<AgentStatus>);
+        if (agentStatus.status !== 'running') return;
+
+        // Load the current saved conversation directly from disk
+        const fsDataRes = await fetch('/api/fs/data-dir').then(r => r.json() as Promise<{ path: string }>);
+        const convPath = `${fsDataRes.path}/conversations/${id}.json`;
+        const convRes = await fetch(`/api/fs/read?path=${encodeURIComponent(convPath)}`);
+        let baseMessages: OllamaMessage[] = [];
+        if (convRes.ok) {
+          const { content } = await convRes.json() as { content: string };
+          try {
+            const parsed = JSON.parse(content) as { messages: OllamaMessage[] };
+            if (Array.isArray(parsed.messages)) baseMessages = parsed.messages;
+          } catch { /* ignore */ }
+        }
+
+        // Seed live state: saved messages + in-progress partial (if any)
+        const liveMessages = [...baseMessages];
+        if (agentStatus.partial !== null) {
+          liveMessages.push(new OllamaMessage(agentStatus.partial, 'assistant'));
+        }
+        const liveConv = new OllamaConversation(liveMessages);
+        liveConvRef.current = liveConv;
+        setStreamConversation(new OllamaConversation(liveMessages));
+        reloadConversation();
+        setLoading(true);
+        openSseStream(agentStatus.eventCount);
+      } catch { /* Vite server not ready or no session */ }
+    };
+
+    void checkAndReconnect();
+
+    return () => {
+      sseRef.current?.close();
+      sseRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  function openSseStream(since: number): void {
+    if (!id) return;
+    const source = new EventSource(`/api/agent/stream/${encodeURIComponent(id)}?since=${since}`);
+    sseRef.current = source;
+
+    source.addEventListener('assistant_start', () => {
+      thinkRef.current = { seen: false, processed: false };
+      liveConvRef.current.addMessage(new OllamaMessage('', 'assistant'));
+      setStreamConversation(new OllamaConversation(liveConvRef.current.messages));
+    });
+
+    source.addEventListener('chunk', (e: MessageEvent<string>) => {
+      const { content } = JSON.parse(e.data) as { content: string };
+      if (content.includes('<think>')) thinkRef.current.seen = true;
+      if (!thinkRef.current.processed && content.includes('</think>')) thinkRef.current.processed = true;
+      liveConvRef.current.appendToLatestMessage(content);
+      if (thinkRef.current.processed || !thinkRef.current.seen) {
+        setStreamConversation(new OllamaConversation(liveConvRef.current.messages));
+      }
+    });
+
+    source.addEventListener('tool_call', (e: MessageEvent<string>) => {
+      const calls = JSON.parse(e.data) as OllamaToolCall[];
+      liveConvRef.current.latestMessage.tool_calls = calls;
+      setStreamConversation(new OllamaConversation(liveConvRef.current.messages));
+    });
+
+    source.addEventListener('message_complete', (e: MessageEvent<string>) => {
+      const msg = JSON.parse(e.data) as { content: string; tool_calls?: OllamaToolCall[] };
+      liveConvRef.current.latestMessage.content = msg.content;
+      liveConvRef.current.latestMessage.tool_calls = msg.tool_calls;
+      setStreamConversation(new OllamaConversation(liveConvRef.current.messages));
+    });
+
+    source.addEventListener('tool_result', (e: MessageEvent<string>) => {
+      const { result } = JSON.parse(e.data) as { name: string; result: string };
+      liveConvRef.current.addMessage(new OllamaMessage(result, 'tool'));
+      setStreamConversation(new OllamaConversation(liveConvRef.current.messages));
+    });
+
+    source.addEventListener('done', () => {
+      source.close();
+      sseRef.current = null;
+      setLoading(false);
+      setStreamConversation(null);
+      reloadConversation();
+      if (textareaRef.current) textareaRef.current.focus();
+    });
+
+    source.addEventListener('error', (e: MessageEvent<string>) => {
+      source.close();
+      sseRef.current = null;
+      setLoading(false);
+      setStreamConversation(null);
+      reloadConversation();
+      if (e.data) {
+        const parsed = JSON.parse(e.data) as { message?: string };
+        if (parsed.message) alert(`Agent error: ${parsed.message}`);
+      }
+      if (textareaRef.current) textareaRef.current.focus();
+    });
+  }
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
     setModel(e.target.value);
@@ -69,21 +187,27 @@ function ChatPage(): JSX.Element {
   function submitPrompt(prompt: string): void {
     if (!id) return;
 
-    if (conversation.messages.length === 0 && systemContext.trim()) {
-      conversation.addMessage(new OllamaMessage(systemContext.trim(), 'system'));
+    // Close any existing SSE stream before starting a new session
+    sseRef.current?.close();
+    sseRef.current = null;
+
+    if (savedConversation.messages.length === 0 && systemContext.trim()) {
+      savedConversation.addMessage(new OllamaMessage(systemContext.trim(), 'system'));
     }
 
     const newMessage = new OllamaMessage(prompt);
     const resolvedMessageContext = messageContext.trim() ? resolveContextVariables(messageContext.trim()) : '';
     if (resolvedMessageContext) newMessage.context = resolvedMessageContext;
-    conversation.addMessage(newMessage);
-    setConversation(new OllamaConversation(conversation.messages));
+    savedConversation.addMessage(newMessage);
+
+    // Persist the user message to disk
+    setSavedConversation(new OllamaConversation(savedConversation.messages));
 
     const now = new Date().toISOString();
     const existing = conversations.find(c => c.id === id);
     upsertConversation({
       id,
-      title: existing?.title ?? deriveTitle(conversation),
+      title: existing?.title ?? deriveTitle(savedConversation),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     });
@@ -91,65 +215,30 @@ function ChatPage(): JSX.Element {
     setQuestion('');
     setLoading(true);
 
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    // Seed the live conversation ref with current messages (no assistant message yet)
+    liveConvRef.current = new OllamaConversation(savedConversation.messages);
+    setStreamConversation(new OllamaConversation(savedConversation.messages));
 
-    async function runAgentLoop(conv: OllamaConversation): Promise<void> {
-      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions(fsPermission), abortController.signal);
-      conv.addMessage(new OllamaMessage("", 'assistant'));
-      setConversation(new OllamaConversation(conv.messages));
-
-      let toolCalls: OllamaToolCall[] | undefined;
-      let thinkProcessed = false;
-      let hasSeenThinkTag = false;
-
-      await ResponseStreamer.Stream(response, (chunk: string) => {
-        try {
-          const chunkResponse = JSON.parse(chunk) as OllamaChatResponse;
-
-          if (chunkResponse.message.tool_calls?.length) {
-            toolCalls = chunkResponse.message.tool_calls;
-            conv.latestMessage.tool_calls = toolCalls;
-            setConversation(new OllamaConversation(conv.messages));
-            return;
-          }
-
-          if (chunkResponse.message.content.includes('<think>')) hasSeenThinkTag = true;
-          if (!thinkProcessed && chunkResponse.message.content.includes('</think>')) thinkProcessed = true;
-
-          conv.appendToLatestMessage(chunkResponse.message.content);
-          if (thinkProcessed || !hasSeenThinkTag) {
-            setConversation(new OllamaConversation(conv.messages));
-          }
-        } catch {
-          // chunk parse error
-        }
-      });
-
-      if (toolCalls?.length) {
-        for (const call of toolCalls) {
-          const result = await executeTool(call);
-          conv.addMessage(new OllamaMessage(result, 'tool'));
-        }
-        setConversation(new OllamaConversation(conv.messages));
-        await runAgentLoop(conv);
-      }
-    }
-
-    runAgentLoop(conversation)
+    // Start the agent on the server
+    fetch('/api/agent/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: id,
+        model,
+        messages: savedConversation.messages,
+        tools: getToolDefinitions(fsPermission),
+        fsPermission,
+      }),
+    })
+      .then(() => openSseStream(0))
       .catch((e: Error) => {
-        if ((e as DOMException).name === 'AbortError') return;
-        console.info("Caught error: ", e);
-        alert(e.message);
-        setQuestion(prompt);
-        conversation.undoLatestMessage();
-        setConversation(new OllamaConversation(conversation.messages));
-      })
-      .finally(() => {
         setLoading(false);
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-        }
+        setStreamConversation(null);
+        savedConversation.undoLatestMessage();
+        setSavedConversation(new OllamaConversation(savedConversation.messages));
+        setQuestion(prompt);
+        alert(e.message);
       });
   }
 
@@ -160,7 +249,13 @@ function ChatPage(): JSX.Element {
   }
 
   function stopChat(): void {
-    abortControllerRef.current?.abort();
+    if (!id) return;
+    sseRef.current?.close();
+    sseRef.current = null;
+    fetch(`/api/agent/abort/${encodeURIComponent(id)}`, { method: 'POST' }).catch(() => {});
+    setLoading(false);
+    setStreamConversation(null);
+    reloadConversation();
   }
 
   function exportChatHistory(): void {
@@ -203,20 +298,20 @@ function ChatPage(): JSX.Element {
   function onConversationEvent(index: number, event: ConversationEventType): void {
     if (event === 'retry') {
       let userIndex = index - 1;
-      while (userIndex >= 0 && conversation.messages[userIndex].role !== 'user') {
+      while (userIndex >= 0 && savedConversation.messages[userIndex].role !== 'user') {
         userIndex--;
       }
       if (userIndex < 0) return;
-      const previousPrompt = conversation.messages[userIndex].content || '';
-      conversation.revertToMessage(userIndex - 1);
-      setConversation(new OllamaConversation(conversation.messages));
+      const previousPrompt = savedConversation.messages[userIndex].content || '';
+      savedConversation.revertToMessage(userIndex - 1);
+      setSavedConversation(new OllamaConversation(savedConversation.messages));
       submitPrompt(previousPrompt);
       return;
     }
 
     if (event === 'revert') {
-      conversation.revertToMessage(index);
-      setConversation(new OllamaConversation(conversation.messages));
+      savedConversation.revertToMessage(index);
+      setSavedConversation(new OllamaConversation(savedConversation.messages));
     }
   }
 

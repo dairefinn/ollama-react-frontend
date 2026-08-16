@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { OllamaConversation } from '../models/ollama-conversation.model';
 import { OllamaMessage } from '../models/ollama-message.model';
 import { readStorageFile, writeStorageFile } from './fs-storage';
 
-export function useConversationStorage(id: string): [OllamaConversation, (conversation: OllamaConversation) => void] {
+export function useConversationStorage(id: string): [
+  OllamaConversation,
+  (conversation: OllamaConversation) => void,
+  () => void,
+] {
   const [conversation, setConversationState] = useState<OllamaConversation>(new OllamaConversation());
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -20,7 +25,7 @@ export function useConversationStorage(id: string): [OllamaConversation, (conver
         // ignore corrupt file
       }
     });
-  }, [id]);
+  }, [id, reloadKey]);
 
   const setConversation = (newConversation: OllamaConversation) => {
     setConversationState(newConversation);
@@ -29,5 +34,9 @@ export function useConversationStorage(id: string): [OllamaConversation, (conver
     }
   };
 
-  return [conversation, setConversation];
+  const reload = useCallback(() => {
+    setReloadKey(k => k + 1);
+  }, []);
+
+  return [conversation, setConversation, reload];
 }
