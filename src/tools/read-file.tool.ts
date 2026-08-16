@@ -17,6 +17,7 @@ export const readFileTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ path }) => `Reading ${String(path)}`,
     execute: async ({ path }) => {
         try {
             const res = await fetch(`/api/fs/read?path=${encodeURIComponent(path as string)}`);

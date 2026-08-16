@@ -18,6 +18,7 @@ export const searchMemoryTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ query }) => `Searching memories for "${String(query)}"`,
     execute: async ({ query }) => {
         const q = (query as string).toLowerCase();
         try {

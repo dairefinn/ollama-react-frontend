@@ -19,6 +19,7 @@ export const saveMemoryTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ title }) => `Saving memory: "${String(title)}"`,
     execute: async ({ title, content }) => {
         const t = title as string;
         const c = content as string;

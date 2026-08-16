@@ -41,3 +41,9 @@ export async function executeTool(call: OllamaToolCall): Promise<string> {
 export function getToolFriendlyName(name: string): string {
     return BUILT_IN_TOOLS.find(t => t.definition.function.name === name)?.friendlyName ?? name;
 }
+
+export function getToolLabel(name: string, args: Record<string, unknown>): string {
+    const tool = BUILT_IN_TOOLS.find(t => t.definition.function.name === name);
+    if (!tool) return name;
+    return tool.renderLabel ? tool.renderLabel(args) : tool.friendlyName;
+}

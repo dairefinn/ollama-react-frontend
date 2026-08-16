@@ -19,6 +19,7 @@ export const listDirectoryTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ path }) => `Listing files in ${String(path)}`,
     execute: async ({ path }) => {
         try {
             const res = await fetch(`/api/fs/list?path=${encodeURIComponent(path as string)}`);

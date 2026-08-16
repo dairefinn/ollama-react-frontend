@@ -4,7 +4,7 @@ import { OllamaMessage } from "../../models/ollama-message.model";
 import './ChatMessage.css';
 import { useState } from "react";
 import { ArrowClockwise, CaretDown, CaretRight, Copy, Info, Rewind } from "@phosphor-icons/react";
-import { getToolFriendlyName } from "../../tools/built-in-tools";
+import { getToolLabel } from "../../tools/built-in-tools";
 
 export type ChatMessageEventType = 'retry' | 'revert';
 
@@ -97,7 +97,7 @@ function ChatMessage({ message, toolResults, onEvent, isLatest }: ChatMessagePro
                     <>
                         <div className='toggle-tool-calls' onClick={() => setToolCallsExpanded(!toolCallsExpanded)}>
                             {toolCallsExpanded ? <CaretDown size={10} /> : <CaretRight size={10} />}
-                            {message.tool_calls.map(tc => getToolFriendlyName(tc.function.name)).join(', ')}
+                            {message.tool_calls.map(tc => getToolLabel(tc.function.name, tc.function.arguments)).join(', ')}
                         </div>
                         {toolCallsExpanded && (
                             <div className="tool-calls-content">

@@ -17,6 +17,7 @@ export const createDirectoryTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ path }) => `Creating directory ${String(path)}`,
     execute: async ({ path }) => {
         try {
             const res = await fetch('/api/fs/mkdir', {

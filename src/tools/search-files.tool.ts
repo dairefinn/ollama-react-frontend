@@ -18,6 +18,7 @@ export const searchFilesTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ path, pattern }) => `Searching ${String(path)} for "${String(pattern)}"`,
     execute: async ({ path, pattern }) => {
         try {
             const params = new URLSearchParams({ path: path as string, pattern: pattern as string });

@@ -6,5 +6,6 @@ export type BuiltInTool = {
     friendlyName: string;
     definition: OllamaToolRequest;
     execute: (args: Record<string, unknown>) => Promise<string>;
+    renderLabel?: (args: Record<string, unknown>) => string;
     fsPermission?: 'read' | 'write';
 };

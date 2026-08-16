@@ -18,6 +18,7 @@ export const readMemoryTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ id }) => `Reading memory ${String(id)}`,
     execute: async ({ id }) => {
         try {
             const memories: { id: string; title: string; content: string; timestamp: string }[] =

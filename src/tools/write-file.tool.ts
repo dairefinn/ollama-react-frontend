@@ -18,6 +18,7 @@ export const writeFileTool: BuiltInTool = {
             }
         }
     },
+    renderLabel: ({ path }) => `Writing ${String(path)}`,
     execute: async ({ path, content }) => {
         try {
             const res = await fetch('/api/fs/write', {
