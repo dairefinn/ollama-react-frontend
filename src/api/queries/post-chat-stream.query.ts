@@ -1,10 +1,9 @@
 import { OllamaConversation } from "../../models/ollama-conversation.model";
-import { OllamaSupportedModel } from "../../models/ollama-supported-model.model";
 import { validatePrompt } from "../validators/query.validator";
 import { OllamaChatRequest, OllamaToolRequest } from "./post-chat.query";
 
 export const queryPostChatStream = (baseUrl: string) => {
-    return async (model: OllamaSupportedModel, conversation: OllamaConversation, tools?: OllamaToolRequest[], signal?: AbortSignal): Promise<Response> => {
+    return async (model: string, conversation: OllamaConversation, tools?: OllamaToolRequest[], signal?: AbortSignal): Promise<Response> => {
         try {
             const latestMessage = conversation.latestMessage;
             if (latestMessage === null) {

@@ -1,6 +1,5 @@
 import { OllamaConversation } from "../../models/ollama-conversation.model";
 import { OllamaMessage } from "../../models/ollama-message.model";
-import { OllamaSupportedModel } from "../../models/ollama-supported-model.model";
 import { validatePrompt } from "../validators/query.validator";
 
 export type OllamaToolRequest = {
@@ -17,14 +16,14 @@ export type OllamaToolRequest = {
 };
 
 export type OllamaChatRequest = {
-    model: OllamaSupportedModel;
+    model: string;
     messages: OllamaMessage[];
     tools?: OllamaToolRequest[];
     stream?: boolean;
 }
 
 export type OllamaChatResponse = {
-    model: OllamaSupportedModel;
+    model: string;
     created_at: string;
     message: OllamaMessage;
     done: boolean;
@@ -37,7 +36,7 @@ export type OllamaChatResponse = {
 };
 
 export const queryPostChat = (baseUrl: string) => {
-    return async (model: OllamaSupportedModel, conversation: OllamaConversation, tools?: OllamaToolRequest[]): Promise<OllamaChatResponse> => {
+    return async (model: string, conversation: OllamaConversation, tools?: OllamaToolRequest[]): Promise<OllamaChatResponse> => {
         try {
             const latestMessage = conversation.latestMessage;
             if (latestMessage === null) {

@@ -1,15 +1,14 @@
 import { OllamaMessage } from "../../models/ollama-message.model";
-import { OllamaSupportedModel } from "../../models/ollama-supported-model.model";
 import { validatePrompt } from "../validators/query.validator";
 
 export type OllamaGenerateRequest = {
-    model: OllamaSupportedModel;
+    model: string;
     prompt: string;
     stream?: boolean;
 };
 
 export type OllamaGenerateResponse = {
-    model: OllamaSupportedModel;
+    model: string;
     created_at: string;
     response: string;
     done: boolean;
@@ -24,7 +23,7 @@ export type OllamaGenerateResponse = {
 };
 
 export const queryPostGenerateStream = (baseUrl: string) => {
-    return async (model: OllamaSupportedModel, message: OllamaMessage): Promise<Response> => {
+    return async (model: string, message: OllamaMessage): Promise<Response> => {
         try {
             if (message === null) {
                 throw new Error("No messages in conversation");

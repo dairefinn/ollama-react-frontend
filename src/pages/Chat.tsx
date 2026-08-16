@@ -34,7 +34,7 @@ function ChatPage(): JSX.Element
     if (models.length > 0 && !models.includes(model)) {
       setModel(models[0]);
     }
-  }, [models]);
+  }, [models, model, setModel]);
 
   function onChangeModel(e: React.ChangeEvent<HTMLSelectElement>) {
     setModel(e.target.value);
