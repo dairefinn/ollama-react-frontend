@@ -42,8 +42,12 @@ You can also configure context to be sent alongside each message. The current ti
 
 ### Tools
 
-The chat has the ability to call tools. Currently there are some built in tools for interacting with it's memory.
+The chat has the ability to call tools. Currently there are some built in tools for interacting with it's memory and the filesystem
 
 ### Memory
 
 The agent can use some built-in tools to read and write memories.
+
+### Filesystem access
+
+The agent has tools for both reading and writing to the filesystem. You must define an allowlist in the settings in order for these to work.
