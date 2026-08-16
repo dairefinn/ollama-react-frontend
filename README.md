@@ -28,13 +28,19 @@ Type in a message and click submit to send a request to the LLM. The LLM will ge
 
 You have the option to regenerate the latest response by the LLM or to revert the conversation back to a previous point.
 
-### State persistence
+### Markdown rendering
 
-Conversation history can be exported to a JSON file and re-imported to restore the conversation. There is also the option to clear the conversation history.
+Agent output is rendered using a markdown surface. This means it can render things like tables, code blocks, etc.
 
-The most recent conversation and model used will be stored in your browser storage so they can be remembered between uses.
+### Persistence
 
-### Context control
+Chats are stored on disk. You can switch between your previous chats using the side panel. Your settings will also be stored on disk.
+
+## Agent runtime
+
+The agent runs decoupled from the UI so if you close the tab or switch to a different chat it will continue to run.
+
+### Custom context
 
 You can configure context to be sent alongside the first message to a chat.
 
