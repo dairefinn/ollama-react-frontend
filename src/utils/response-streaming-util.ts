@@ -29,6 +29,7 @@ export class ResponseStreamer {
                 const chunk = decoder.decode(value);
                 onMessage(chunk);
             } catch (e) {
+                if (e instanceof DOMException && e.name === 'AbortError') break;
                 onError(new Error(`Failed to process chunk: ${e}`));
             }
         }

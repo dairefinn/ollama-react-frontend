@@ -1,5 +1,5 @@
 import { JSX, useEffect, useRef, useState } from "react";
-import { Broom, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import { Broom, DownloadSimple, Stop, UploadSimple } from "@phosphor-icons/react";
 import { OllamaAPI } from "../api/ollama-api";
 import { OllamaConversation } from "../models/ollama-conversation.model";
 import { OllamaMessage, OllamaToolCall } from "../models/ollama-message.model";
@@ -28,6 +28,7 @@ function ChatPage(): JSX.Element
   const [messageContext] = useMessageContext();
   const [fsPermission] = useFsPermission();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (models.length > 0 && !models.includes(model)) {
@@ -53,8 +54,11 @@ function ChatPage(): JSX.Element
     setQuestion('');
     setLoading(true);
 
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     async function runAgentLoop(conv: OllamaConversation): Promise<void> {
-      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions(fsPermission));
+      const response = await OllamaAPI.chatStream(model, conv, getToolDefinitions(fsPermission), abortController.signal);
       conv.addMessage(new OllamaMessage("", 'assistant'));
       setConversation(new OllamaConversation(conv.messages));
 
@@ -97,6 +101,7 @@ function ChatPage(): JSX.Element
 
     runAgentLoop(conversation)
       .catch((e: Error) => {
+        if ((e as DOMException).name === 'AbortError') return;
         console.info("Caught error: ", e);
         alert(e.message);
         setQuestion(prompt);
@@ -116,6 +121,10 @@ function ChatPage(): JSX.Element
 
     e.preventDefault();
     submitPrompt(question);
+  }
+
+  function stopChat(): void {
+    abortControllerRef.current?.abort();
   }
 
   function clearChatHistory(): void {
@@ -201,6 +210,11 @@ function ChatPage(): JSX.Element
             {models.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
         </div>
+        {loading && (
+          <button className='stop-btn' title="Stop generation" onClick={stopChat}>
+            <Stop size={16} />
+          </button>
+        )}
       </div>
     </>
   )
